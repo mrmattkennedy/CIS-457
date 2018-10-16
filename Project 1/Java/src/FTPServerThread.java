@@ -198,6 +198,7 @@ public class FTPServerThread extends Thread {
 			e.printStackTrace();
 		} finally {
 			try {
+				outToClient.writeUTF("quit:");
 				outToClient.close();
 				inFromClient.close();
 				controlSocket.close();

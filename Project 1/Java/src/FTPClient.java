@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.StringTokenizer;
 
 import javax.swing.JFileChooser;
@@ -82,6 +83,8 @@ public class FTPClient {
 							+ "\n list: || retr: file.txt || stor: || quit:\n\n");
 					//Get the first input from user. Blocks until something happens.
 					sentence = inFromUser.readLine();
+					
+						
 					modifiedSentence = "";
 					
 					//List command
@@ -217,10 +220,18 @@ public class FTPClient {
 						
 					} else {
 						System.out.println("Command not recognized.");
+						port = port1 + 2;
+						
+						//Tests if the connection is still open.
+						try {
+							outToServer.writeBytes("test " + '\n');
+						} catch (Exception e) {
+							throw new SocketException();
+						}
 					}
 				}
 			} catch (Exception e) {
-				System.out.println("Error: " + e.toString());
+				System.out.println("Connection closed.");
 			} finally {
 				try  {
 					ControlSocket.close();
