@@ -11,7 +11,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.StringTokenizer;
-
 import javax.swing.JFileChooser;
 
 /**********************************************************************
@@ -254,7 +253,7 @@ public class FTPClient {
 		} catch (SocketException e) {
 			System.out.println("Connection closed.");
 		} catch (Exception e) {
-			System.out.println("Connection not established.");
+			System.out.println("Quitting application.");
 		} finally {
 			try {
 				ControlSocket.close();
@@ -275,6 +274,7 @@ public class FTPClient {
 	 * @return True if valid, false if not.
 	 *****************************************************************/
 	private static boolean checkValidArgs(String[] tempVerify) {
+		int portIndex = 2;
 		//If not 3 args, then force user input again.
 		if (tempVerify.length != 3) {
 			return false;
@@ -282,7 +282,7 @@ public class FTPClient {
 		
 		//If the 3rd argument (port) isn't integer, try again.
 		try {
-			Integer.parseInt(tempVerify[2]);
+			Integer.parseInt(tempVerify[portIndex]);
 			return true;
 		} catch (NumberFormatException e) {
 			return false;
