@@ -135,7 +135,9 @@ public class FTPServerThread extends Thread {
 						//If all good, open dataSocket on given port.
 						outToClient.writeInt(200);
 						Socket dataSocket = makeDataSocket(Integer.parseInt(clientTokens.get(0)));
-						DataOutputStream outData = new DataOutputStream(new BufferedOutputStream(dataSocket.getOutputStream()));
+						DataOutputStream outData = 
+								new DataOutputStream(
+								new BufferedOutputStream(dataSocket.getOutputStream()));
 						//Use BufferedInputStream to read file in as bytes.
 						FileInputStream fis = new FileInputStream(fileToSend);
 						BufferedInputStream bis = new BufferedInputStream(fis);
@@ -163,7 +165,8 @@ public class FTPServerThread extends Thread {
 				} else if (clientCommand.equals("stor")) {
 					//Skip status code, no need to check if file exists if user is forced to choose.
 					Socket dataSocket = makeDataSocket(Integer.parseInt(clientTokens.get(0)));
-					DataInputStream inData = new DataInputStream(new BufferedInputStream(dataSocket.getInputStream()));
+					DataInputStream inData = new DataInputStream(
+							new BufferedInputStream(dataSocket.getInputStream()));
 					//readInt() from client to get byte array size.
 					byte[] dataIn = new byte[inData.readInt()];
 					while (inData.available() == 0)
@@ -189,7 +192,8 @@ public class FTPServerThread extends Thread {
 					
 				//Quit command.
 				} else if (clientCommand.equals("quit")) {
-					System.out.println("Closing connection " + controlSocket.getInetAddress().getHostName() + ".");
+					System.out.println("Closing connection " + 
+							controlSocket.getInetAddress().getHostName() + ".");
 					outToClient.close();
 					inFromClient.close();
 					controlSocket.close();
@@ -202,7 +206,6 @@ public class FTPServerThread extends Thread {
 			e.printStackTrace();
 		} finally {
 			try {
-				outToClient.writeUTF("quit");
 				outToClient.close();
 				inFromClient.close();
 				controlSocket.close();

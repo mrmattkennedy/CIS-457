@@ -41,9 +41,6 @@ public class FTPClient {
 		/** Determines if the program should continue or not at points. */
 		int statusCode;
 
-		/** Flag for the infinite loop to determine if continue or not. */
-		boolean clientgo = true;
-
 		/** Port to open the control connection on. */
 		int port = 11230;
 
@@ -59,15 +56,18 @@ public class FTPClient {
 		/** Used to verify input has 3 arguments. */
 		String[] tempVerify = sentence.split(" ");
 
-		/** Use while loop to verify input. 
-		 * If doesn't start with connect or invalid args, continue loop.
+		/**
+		 * Use while loop to verify input. If doesn't start with connect or invalid
+		 * args, continue loop.
 		 */
 		while (!tempVerify[0].equals("connect") || !checkValidArgs(tempVerify)) {
-			System.out.println("Incorrect arguments, please try again.\n" + "Format: connect <IP Address> <Port>\n");
+			System.out.println(
+				"Incorrect arguments, please try again.\n" + 
+				"Format: connect <IP Address> <Port>\n");
 			sentence = inFromUser.readLine();
-			tempVerify = sentence.split(" ");		
+			tempVerify = sentence.split(" ");
 		}
-		
+
 		// Create the variables here due to scope.
 		// This way finally block can close later if exception caught.
 		Socket ControlSocket = null;
@@ -91,12 +91,12 @@ public class FTPClient {
 			System.out.println("You are connected to " + serverName);
 
 			// Infinite loop to work in.
-			while (clientgo) {
+			while (true) {
 				System.out
-						.println("\nWhat would you like to do next " + "\n list || retr file.txt || stor || quit\n\n");
+						.println("\nWhat would you like to do next " + 
+								"\n list || retr file.txt || stor || quit\n\n");
 				// Get the first input from user. Blocks until something happens.
 				sentence = inFromUser.readLine();
-
 				modifiedSentence = "";
 
 				// List command
@@ -111,7 +111,8 @@ public class FTPClient {
 					ServerSocket welcomeData = new ServerSocket(port);
 					Socket dataSocket = welcomeData.accept();
 					// Input stream to receive data from server on data connection.
-					DataInputStream inData = new DataInputStream(new BufferedInputStream(dataSocket.getInputStream()));
+					DataInputStream inData = new DataInputStream(
+							new BufferedInputStream(dataSocket.getInputStream()));
 
 					// Wait while data becomes available.
 					// This command will execute too quickly without waiting.
@@ -184,15 +185,13 @@ public class FTPClient {
 					// Store command.
 				} else if (sentence.startsWith("stor")) {
 					// Use JFileChooser to select file.
-					// Helpful because if no file selected, no command is sent, and no connection is
-					// opened.
+					// Helpful because if no file selected, 
+					// no command is sent, and no connection is opened.
 					JFileChooser chooser = new JFileChooser();
 					chooser.showSaveDialog(null);
 					File fileToSend = chooser.getSelectedFile();
 					if (chooser.getSelectedFile() == null) {
 						System.out.println("No file selected.");
-						System.out.println(
-								"\nWhat would you like to do next \n list || retr file.txt ||stor || quit\n\n");
 						continue;
 					}
 
@@ -236,7 +235,7 @@ public class FTPClient {
 
 				} else if (sentence.equals("quit")) {
 					outToServer.writeBytes(sentence + " " + '\n');
-					clientgo = false;
+					break;
 
 				} else {
 					System.out.println("Command not recognized.");
@@ -244,7 +243,7 @@ public class FTPClient {
 
 					// Tests if the connection is still open.
 					try {
-						outToServer.writeBytes("test " + '\n');
+						outToServer.writeBytes("ping " + '\n');
 					} catch (Exception e) {
 						throw new SocketException();
 					}
@@ -264,23 +263,23 @@ public class FTPClient {
 			}
 		}
 	}
-	
+
 	/******************************************************************
-	 * Verifies that the number of arguments is right and that the 3rd
+	 * Verifies that the number of arguments is right and that the 3rd 
 	 * argument is an integer (port).
 	 * 
-	 * @param tempVerify The inputs given by the user split into a
-	 * 	String array.
+	 * @param tempVerify The inputs given by the user split into a 
+	 * String array.
 	 * @return True if valid, false if not.
 	 *****************************************************************/
 	private static boolean checkValidArgs(String[] tempVerify) {
 		int portIndex = 2;
-		//If not 3 args, then force user input again.
+		// If not 3 args, then force user input again.
 		if (tempVerify.length != 3) {
 			return false;
 		}
-		
-		//If the 3rd argument (port) isn't integer, try again.
+
+		// If the 3rd argument (port) isn't integer, try again.
 		try {
 			Integer.parseInt(tempVerify[portIndex]);
 			return true;
