@@ -13,7 +13,7 @@ import java.net.*;
 public class FTPServer {
 	private static int port = 11230;
 	private static ServerSocket welcomeSocket;
-	private static int currentSocket = 1;
+	private static int currentSocket = 0;
 	private static boolean serverGo = true;
 	
 	/******************************************************************
@@ -62,6 +62,7 @@ public class FTPServer {
 			System.out.println("Error: " + e.toString());
 		} finally {
 			try {
+				System.out.println("Closing welcome socket...");
 				welcomeSocket.close();
 			} catch (IOException e) {
 				return;

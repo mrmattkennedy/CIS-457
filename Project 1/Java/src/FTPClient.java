@@ -79,8 +79,8 @@ public class FTPClient {
 				
 				//Infinite loop to work in.
 				while (clientgo) {
-					System.out.println("\nWhat would you like to do next: "
-							+ "\n list: || retr: file.txt || stor: || quit:\n\n");
+					System.out.println("\nWhat would you like to do next "
+							+ "\n list || retr file.txt || stor || quit\n\n");
 					//Get the first input from user. Blocks until something happens.
 					sentence = inFromUser.readLine();
 					
@@ -88,7 +88,7 @@ public class FTPClient {
 					modifiedSentence = "";
 					
 					//List command
-					if (sentence.equals("list:")) {
+					if (sentence.equals("list")) {
 						//Set port equal to port + 2, as per project guidelines.
 						port = port1 + 2;
 						
@@ -111,14 +111,14 @@ public class FTPClient {
 							modifiedSentence += inData.readUTF();
 						
 						//Print list.
-						System.out.println("List is \n" + modifiedSentence);
+						System.out.println("\nList is \n" + modifiedSentence);
 						
 						//Close server socket and the data socket.
 						welcomeData.close();
 						dataSocket.close();
 						
 					//Retrieve command
-					} else if (sentence.startsWith("retr:")) {
+					} else if (sentence.startsWith("retr")) {
 						//Set port equal to port + 2, as per project guidelines.
 						port = port1 + 2;
 						//Send the command to the server.
@@ -149,6 +149,7 @@ public class FTPClient {
 							if (chooser.getSelectedFile() == null)
 								filePath = System.getProperty("user.dir") + "/" + temp[temp.length - 1];
 							
+							System.out.println("Saving file at " + filePath);
 							//Create a byte array of a size given by the inData stream to get exact file size.
 							byte[] dataIn = new byte[inData.readInt()];
 							
@@ -167,7 +168,7 @@ public class FTPClient {
 						}
 						
 					//Store command.
-					} else if (sentence.startsWith("stor:")) {
+					} else if (sentence.startsWith("stor")) {
 						//Use JFileChooser to select file.
 						//Helpful because if no file selected, no command is sent, and no connection is opened.
 						JFileChooser chooser=new JFileChooser();
@@ -175,7 +176,7 @@ public class FTPClient {
 						File fileToSend = chooser.getSelectedFile();
 						if (chooser.getSelectedFile() == null) {
 							System.out.println("No file selected.");
-							System.out.println("\nWhat would you like to do next: \n list: || retr: file.txt ||stor: || quit:\n\n");
+							System.out.println("\nWhat would you like to do next \n list || retr file.txt ||stor || quit\n\n");
 							continue;
 						}
 						
@@ -191,6 +192,8 @@ public class FTPClient {
 						ServerSocket welcomeData = new ServerSocket(port);
 						Socket dataSocket = welcomeData.accept();
 						DataOutputStream outData = new DataOutputStream(new BufferedOutputStream(dataSocket.getOutputStream()));
+						
+						System.out.println("Storing " + fileToSend.getAbsolutePath());
 						
 						//Get size of file, create byte array of that size.
 						long length = fileToSend.length();
@@ -214,7 +217,7 @@ public class FTPClient {
 						welcomeData.close();
 						dataSocket.close();
 						
-					} else if (sentence.equals("quit:")) {
+					} else if (sentence.equals("quit")) {
 						outToServer.writeBytes(sentence + " " + '\n');
 						clientgo = false;
 						

@@ -61,7 +61,7 @@ public class FTPServerThread extends Thread {
 			outToClient = new DataOutputStream(controlSocket.getOutputStream());
 			inFromClient = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
 		} catch (IOException e) {
-			System.out.println("Error: " + e.getLocalizedMessage());
+			System.out.println("Error " + e.getLocalizedMessage());
 		}
     }
 	
@@ -88,17 +88,17 @@ public class FTPServerThread extends Thread {
 					
 					System.out.println(clientTokens);
 					
-					//If the size > 1, the command is 1. Ex: quit: command.
+					//If the size > 1, the command is 1. Ex quit command.
 					//Used for when a port is necessary for a data connection.
 					if (clientTokens.size() > 1)
 						clientCommand = clientTokens.get(1);
 					else 
 						clientCommand = clientTokens.get(0);
 				} else
-					clientCommand = "quit:";
+					clientCommand = "quit";
 				
 				//List command.
-				if (clientCommand.equals("list:")) {
+				if (clientCommand.equals("list")) {
 					//Create a data socket on the given port.
 					Socket dataSocket = makeDataSocket(Integer.parseInt(clientTokens.get(0)));
 					DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());
@@ -116,7 +116,7 @@ public class FTPServerThread extends Thread {
 					System.out.println("Data Socket closed.\n");
 				
 				//Retrieve command.
-				} else if (clientCommand.equals("retr:")) {
+				} else if (clientCommand.equals("retr")) {
 					//If not exactly 3 tokens, status code is 550 (error).
 					if (clientTokens.size() < 3) {
 						System.out.println("No file supplied.");
@@ -140,6 +140,7 @@ public class FTPServerThread extends Thread {
 						FileInputStream fis = new FileInputStream(fileToSend);
 						BufferedInputStream bis = new BufferedInputStream(fis);
 						
+						System.out.println("Sending requested file " + fileToSend.getName());
 						//Get size of file.
 						long length = fileToSend.length();
 						//Create byte array that is the size of the file.
@@ -159,7 +160,7 @@ public class FTPServerThread extends Thread {
 					}
 				
 				//Store command.
-				} else if (clientCommand.equals("stor:")) {
+				} else if (clientCommand.equals("stor")) {
 					//Skip status code, no need to check if file exists if user is forced to choose.
 					Socket dataSocket = makeDataSocket(Integer.parseInt(clientTokens.get(0)));
 					DataInputStream inData = new DataInputStream(new BufferedInputStream(dataSocket.getInputStream()));
@@ -171,7 +172,10 @@ public class FTPServerThread extends Thread {
 					//Get the server working directory.
 					String filePath = System.getProperty("user.dir") + "/";
 					//Get fhe file name from client.
-					filePath += inData.readUTF();
+					String fileName = inData.readUTF();
+					filePath += fileName;
+					
+					System.out.println("Storing " + fileName + " in working directory");
 					
 					//Read the bytes for the file in.
 					inData.readFully(dataIn);
@@ -184,7 +188,7 @@ public class FTPServerThread extends Thread {
 					dataSocket.close();
 					
 				//Quit command.
-				} else if (clientCommand.equals("quit:")) {
+				} else if (clientCommand.equals("quit")) {
 					System.out.println("Closing connection " + controlSocket.getInetAddress().getHostName() + ".");
 					outToClient.close();
 					inFromClient.close();
@@ -194,11 +198,11 @@ public class FTPServerThread extends Thread {
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("Error: " + e.toString());
+			System.out.println("Error " + e.toString());
 			e.printStackTrace();
 		} finally {
 			try {
-				outToClient.writeUTF("quit:");
+				outToClient.writeUTF("quit");
 				outToClient.close();
 				inFromClient.close();
 				controlSocket.close();
@@ -220,7 +224,7 @@ public class FTPServerThread extends Thread {
 		try {
 			return new Socket(controlSocket.getInetAddress(), port);
 		} catch (IOException e) {
-			System.out.println("Error: " + e.toString());
+			System.out.println("Error " + e.toString());
 		}
 		return null;
 	}
