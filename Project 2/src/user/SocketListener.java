@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SocketListener {
+public class SocketListener implements Runnable {
 	
 	private Socket controlSocket;
 	private DataOutputStream outToServer;
@@ -47,16 +47,17 @@ public class SocketListener {
 			stringToServer = stringToServer.substring(0, stringToServer.length() - 1) + "\n";
 			outToServer.writeUTF(stringToServer); //can just send this, as is the first command in the connection.
 			outToServer.flush();
-			listenForCommands();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private void listenForCommands() {
+
+	@Override
+	public void run() {
 		while (true) {
-            try {
+	        try {
 				String message = inFromServer.readUTF();
 				
 				if (message.startsWith("updateTable:")) {
@@ -66,10 +67,10 @@ public class SocketListener {
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.exit(1);
-			}
-         }
+			}	
+		}
 	}
-	
+
 	private String getXMLFile() throws Exception {
 		File file = new File(System.getProperty("user.dir") + "/filelist.xml");
 		if (file.exists()) {

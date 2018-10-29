@@ -124,7 +124,7 @@ public class UserClient implements ActionListener {
 		searchPanel.add(new JLabel("Keyword"));
 		searchPanel.add(searchField);
 		searchPanel.add(searchBtn);
-		searchPanel.add(pane);
+		searchPanel.add(new JScrollPane(pane));
 		
 		
 		commandPanel = new JPanel();
@@ -222,24 +222,25 @@ public class UserClient implements ActionListener {
 //			for (int i = 0; i < names.size(); i++)
 //				tableModel.addVariable(speed, host, names.get(i), user);
 //			tableModel.repaintTable();
-			SocketListener sListen = new SocketListener(serverHost.getText(), 
+			Thread sListen = new Thread(new SocketListener(serverHost.getText(), 
 					serverPort.getText(),
 					(String)(connection.getSelectedItem()),
 					userHost.getText(),
 					username.getText(),
-					this);
+					this));
+			sListen.start();
 		}
 	}
 	
 	public void updateTable(String message) {
+		tableModel.removeAllVariables();
 		String[] newRows = message.split("[|]");
 		String[] temp;
 		for (int i = 0; i < newRows.length; i++) {
 			temp = newRows[i].split(" ");
-			for (int j = 0; j < temp.length; j++)
-				System.out.println(temp[j]);
+			tableModel.addFile(temp[0], temp[1], temp[2], temp[3]);
 		}
-		//TODO: update the table.
+		tableModel.repaintTable();
 	}
 	
 	public static void main(String[] args) {

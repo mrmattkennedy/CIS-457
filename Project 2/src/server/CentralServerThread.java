@@ -49,9 +49,11 @@ public class CentralServerThread extends Thread {
 	/** Determines if the infinite loop should continue. */
 	private boolean serverGo;
 	
-	private String xmlFile = "null";
+	private String xmlFile = "";
 
 	private static Vector<CentralServerThread> clients = new Vector<CentralServerThread>();
+	
+	private static String allXMLFiles = "";
 	
 
 	/******************************************************************
@@ -82,7 +84,8 @@ public class CentralServerThread extends Thread {
 		try {
 			xmlFile = inFromClient.readLine().substring(2);
 			System.out.println("xml file is " + xmlFile);
-			broadcast(xmlFile);
+			allXMLFiles += xmlFile + "|";
+			broadcast(allXMLFiles);
 			while (serverGo) {
 				// Block until a command is read from the client.
 				String fromClient = inFromClient.readLine();
@@ -155,10 +158,8 @@ public class CentralServerThread extends Thread {
 		synchronized (clients) {
 			Enumeration<CentralServerThread> e = clients.elements();
 			
-			System.out.println("broadcasting");
 			while (e.hasMoreElements()) {
 				CentralServerThread client = e.nextElement();
-				
 				try {
 					client.outToClient.writeUTF("updateTable:");
 					client.outToClient.writeUTF(message);
@@ -172,6 +173,5 @@ public class CentralServerThread extends Thread {
 				}
 			}
 		}
-		System.out.println("done");
 	}
 }

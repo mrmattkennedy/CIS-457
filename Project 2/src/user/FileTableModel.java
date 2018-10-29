@@ -34,7 +34,7 @@ public class FileTableModel extends AbstractTableModel {
 		fireTableRowsUpdated(0, files.size() - 1);
 	}
 	
-	public void addVariable(String speed, String host, String file, String username)
+	public void addFile(String speed, String host, String file, String username)
 	{
 		for (int i = 0; i < files.size(); i++)
 			if(files.get(i)[0].equals(speed) &&
@@ -44,7 +44,7 @@ public class FileTableModel extends AbstractTableModel {
 				return;
 
 		String[] temp = {speed, host, file, username};
-		files.add(temp);		
+		files.add(temp);
 		repaintTable();
 	}
 
@@ -52,6 +52,10 @@ public class FileTableModel extends AbstractTableModel {
 	{
 		files.remove(index);
 		repaintTable();
+	}
+	
+	public void removeAllVariables() {
+		files.clear();
 	}
 
 	@Override
