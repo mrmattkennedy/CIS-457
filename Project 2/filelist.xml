@@ -12,4 +12,8 @@
 		<name>test.txt</name>
 		<description>This is the ultimate test file.</description>
 	</file>
+	<file>
+		<name>dobeboopbop.txt</name>
+		<description>This is a worthlessfile.</description>
+	</file>
 </filelist>
