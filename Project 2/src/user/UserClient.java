@@ -1,5 +1,3 @@
-package user;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -8,13 +6,15 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
@@ -32,11 +32,23 @@ public class UserClient {
 	private JTextField username;
 	private JTextField userHost;
 	private JButton connectBtn;
-	private JPanel panel2;
-	private JPanel panel3;
+	private String[] connectionTypes;
+	private JComboBox<String> connection;
+	
+	private JPanel searchPanel;
+	private JTextField searchField;
+	private JButton searchBtn;
+	private JTable fileTable;
+	
+	private JPanel commandPanel;
+	private JTextField commandText;
+	private JButton commandBtn;
+	private JTextPane commandLog;
+	
+	
 	private JFrame frame;
 	private static final int WIDTH = 650;
-	private static final int HEIGHT = 400;
+	private static final int HEIGHT = 450;
 	
 	public UserClient() {
 		connectPanel = new JPanel();
@@ -47,12 +59,15 @@ public class UserClient {
 		username = new JTextField();
 		userHost= new JTextField();
 		connectBtn = new JButton("Connect");
+		connectionTypes = new String[] {"ISDN", "DSL", "Cable", "Wireless", "T1", "T3", "OC3", "Satellite"};
+		connection = new JComboBox<String>(connectionTypes);
 		
 		serverHost.setPreferredSize(new Dimension(220, 30));
 		serverPort.setPreferredSize(new Dimension(90, 30));
 		username.setPreferredSize(new Dimension(110, 30));
 		userHost.setPreferredSize(new Dimension(150, 30));
 		connectBtn.setPreferredSize(new Dimension(100, 30));
+		connection.setPreferredSize(new Dimension(120, 30));
 		
 		connectSubPanel1.add(new JLabel("Server Hostname"));
 		connectSubPanel1.add(serverHost);
@@ -63,22 +78,54 @@ public class UserClient {
 		connectSubPanel2.add(username);
 		connectSubPanel2.add(new JLabel("Hostname"));
 		connectSubPanel2.add(userHost);
+		connectSubPanel2.add(connection);
 		
 		connectPanel.setLayout(new GridLayout(2, 1));
 		connectPanel.add(connectSubPanel1);
 		connectPanel.add(connectSubPanel2);
 		
-		panel2 = new JPanel();
-		panel3 = new JPanel();
+		
+		searchPanel = new JPanel();
+		searchField = new JTextField();
+		searchBtn = new JButton("Search");
+		fileTable = new JTable();
+		
+		searchField.setPreferredSize(new Dimension(200, 30));
+		searchBtn.setPreferredSize(new Dimension(100, 30));
+		fileTable.setPreferredSize(new Dimension(WIDTH - 100, HEIGHT / 4));
+		
+		searchPanel.add(new JLabel("Keyword"));
+		searchPanel.add(searchField);
+		searchPanel.add(searchBtn);
+		searchPanel.add(fileTable);
+		
+		
+		commandPanel = new JPanel();
+		commandText = new JTextField();
+		commandBtn = new JButton("Send");
+		commandLog = new JTextPane();
+		
+		commandText.setPreferredSize(new Dimension(300, 30));
+		commandBtn.setPreferredSize(new Dimension(100, 30));
+		commandLog.setPreferredSize(new Dimension(WIDTH - 100, HEIGHT / 8));
+		commandLog.setContentType("text/html");
+		
+		commandPanel.add(new JLabel("Enter command: "));
+		commandPanel.add(commandText);
+		commandPanel.add(commandBtn);
+		commandPanel.add(commandLog);
+		
+		
+		
 		connectPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-		panel2.setBorder(BorderFactory.createLineBorder(Color.black));
-		panel3.setBorder(BorderFactory.createLineBorder(Color.black));
+		searchPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+		commandPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		
 		
 		frame = new JFrame();
 		frame.setLayout(new GridBagLayout());
-		frame.setSize(new Dimension(WIDTH, HEIGHT + 50));
 		setLayout();
+		frame.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -89,32 +136,37 @@ public class UserClient {
 		GridBagConstraints gbCons = new GridBagConstraints();
 		gbCons.fill = GridBagConstraints.HORIZONTAL;
 
-//		gbCons.anchor = GridBagConstraints.FIRST_LINE_START;
 		gbCons.insets = new Insets(10, 5, 10, 5);
 		gbCons.gridwidth = GridBagConstraints.REMAINDER;
 		gbCons.gridx = 0;
 		gbCons.gridy = 0; 
-//		gbCons.ipadx = 800;
 		gbCons.ipady = (int) (0.1 * HEIGHT);
 		frame.add(connectPanel, gbCons);
-
-//		gbCons.anchor = GridBagConstraints.CENTER;
-		gbCons.insets = new Insets(10,5,10,5);
-		gbCons.gridwidth = GridBagConstraints.REMAINDER;
+		
 		gbCons.gridx = 0;
 		gbCons.gridy = 1; 
-//		gbCons.ipadx = 800;
-		gbCons.ipady = (int) ((250.0 / 650.0) * HEIGHT);
-		frame.add(panel2, gbCons);
+		gbCons.ipady = (int) (0.30 * HEIGHT);
+		frame.add(searchPanel, gbCons);
 
-//		gbCons.anchor = GridBagConstraints.SOUTH;
 		gbCons.insets = new Insets(10,5,10,5);
 		gbCons.gridwidth = GridBagConstraints.REMAINDER;
 		gbCons.gridx = 0;
 		gbCons.gridy = 2; 
-		gbCons.ipadx = WIDTH - 50;
-		gbCons.ipady = (int) ((100.0 / 650.0) * HEIGHT);
-		frame.add(panel3, gbCons);
+		gbCons.ipadx = WIDTH - 200;
+		gbCons.ipady = (int) (0.15 * HEIGHT);
+		frame.add(commandPanel, gbCons);
+		
+		gbCons.gridx = 0;
+		gbCons.gridy = 0;
+		gbCons.ipadx = 10;
+		gbCons.ipady = 10;
+		gbCons.anchor = GridBagConstraints.NORTHWEST;
+		gbCons.insets = new Insets(-10, 5, 0, 0);
+		frame.add(new JLabel("Connection"), gbCons);
+		gbCons.gridy = 1;
+		frame.add(new JLabel("Search"), gbCons);
+		gbCons.gridy = 2;
+		frame.add(new JLabel("Command"), gbCons);
 	}
 	
 	public static void main(String[] args) {
