@@ -1,6 +1,8 @@
 package game;
 //start screen where players join, main screen
 //game starts,
+//datagram packet to request player nums, get highest response.
+//reuse components by replacing panel, then replacing. not necessary
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -21,7 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import player.Player;
 
-public class MainGame implements ActionListener {
+public class MainGame extends JFrame implements ActionListener {
 	
 	private JButton playGame;
 	private JFrame frame;
@@ -37,6 +39,7 @@ public class MainGame implements ActionListener {
 	private JComboBox<String> numRoundsChooser;
 	private JButton goBtn;
 	private JButton cancelBtn;
+	
 	
 	
 	private static final int WIDTH = 650;
@@ -118,16 +121,13 @@ public class MainGame implements ActionListener {
 		tempPanel.add(cancelBtn);
 		controlPanel.add(tempPanel);
 		
-		
-		frame = new JFrame();
-		
-		frame.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
-		frame.setLayout(new GridBagLayout());
+		this.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
+		this.setLayout(new GridBagLayout());
 		setLayout();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLocationRelativeTo(null);
-		frame.setResizable(false);
-		frame.setVisible(true);
+		this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);
+		this.setLocationRelativeTo(null);
+		this.setResizable(false);
+		this.setVisible(true);
 	}
 	
 	private void setLayout() {
@@ -140,7 +140,7 @@ public class MainGame implements ActionListener {
 		gbCons.weightx = 0.7;
 		gbCons.weighty = 1;
 		gbCons.ipady = (int) (HEIGHT);
-		frame.add(playerPanel, gbCons);
+		this.add(playerPanel, gbCons);
 		
 		gbCons.gridx = 2;
 		gbCons.gridy = 0; 
@@ -148,7 +148,7 @@ public class MainGame implements ActionListener {
 		gbCons.weightx = 0.2;
 		gbCons.weighty = 1;
 		gbCons.ipady = (int) (HEIGHT);
-		frame.add(controlPanel, gbCons);
+		this.add(controlPanel, gbCons);
 
 	}
 
@@ -165,7 +165,7 @@ public class MainGame implements ActionListener {
 			}
 			
 			new DrawScreen(playersInfo);
-			frame.dispose();
+			this.dispose();
 		}
 		
 		

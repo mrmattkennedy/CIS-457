@@ -35,7 +35,8 @@ public class DrawScreen implements ActionListener {
 	private JScrollPane pane;
 	private JTextField guessText;
 	private JButton guessBtn;
-	
+	private int port;
+	private String address = "226.1.3.5";
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
 	
