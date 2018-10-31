@@ -1,0 +1,18 @@
+(frame.number = 22) && tcp  Displays the TCP packets with a wireshark packet number equal to 22 
+
+ip.addr==192.168.0.101	     Displays the packets with source or destination IP address equals to 192.168.0.101
+ip.src_host==192.168.0.101   Displays the packets with source 192.168.0.101
+ip.src==192.168.0.101	     Displays the packets with source 192.168.0.101
+
+
+ip.src==192.168.0.101 and ip.dst==216.239.37.99         Displays the packets with source 192.168.0.101 and dest ip 216.239.37.99
+ip.src != 192.168.0.101 and ip.dst != 216.239.37.99     Displays the packets with source not 192.168.0.101 and dest ip not 216.239.37.99
+
+
+
+
+tcp.port==80		Display packets with TCP source or destination port 80
+tcp.dstport==3840	Display packets with TCP destination port 3840
+
+tcp.flags.syn==0x02     Display packets with a TCP SYN flag.
+tcp.flags               Display packets having a TCP flags
