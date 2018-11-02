@@ -4,7 +4,7 @@ package game;
 //game starts,
 //datagram packet to request player nums, get highest response.
 //reuse components by replacing panel, then replacing. not necessary
-
+//add increment on players.. currently adds in context, but need to reset?
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -36,8 +36,6 @@ import player.SocketListener;
 
 public class MainGame extends JFrame implements ActionListener, DocumentListener {
 
-	private JButton playGame;
-	private JFrame frame;
 	private JPanel playerPanel;
 	private JPanel controlPanel;
 	private JPanel[] players;
@@ -52,16 +50,21 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	private JButton cancelBtn;
 	private MulticastSocket cSocket;
 	private InetAddress group;
-	private int playerNum = 0;
-
+	private int playerNum = -1;
+	private int numPlayers = 0;
+	private int numReadyPlayers = 0;
+	private Thread listener;
+	private boolean playerReady = false;
+	private String goBtnStatus = "READY";
+	
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
 
 	public MainGame(MulticastSocket socket, InetAddress group) {
 		cSocket = socket;
 		this.group = group;
-		getNumPlayers();
-		Thread listener = new Thread(new SocketListener(socket, group, playerNum));
+		String[] temp = getPlayerInfo();
+		listener = new Thread(new SocketListener(socket, group, playerNum, this));
 		listener.start();
 
 		panelFont = new Font("Calibri", Font.PLAIN, 18);
@@ -72,8 +75,8 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		playerPanel.setLayout(new GridLayout(4, 1, 5, 5));
 		playerCount = new int[] { 1, 2, 3, 4 };
 
-		playerNames = new JTextField[4];
-		players = new JPanel[4];
+		playerNames = new JTextField[playerCount.length];
+		players = new JPanel[playerCount.length];
 		for (int i = 0; i < playerCount.length; i++) {
 			playerNames[i] = new JTextField();
 			playerNames[i].setPreferredSize(new Dimension(300, 30));
@@ -103,6 +106,9 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			playerPanel.add(players[i]);
 		}
 		playerNames[playerNum].getDocument().addDocumentListener(this);
+		for (int i = 0; i < playerNames.length; i++)
+			if (temp[i] != null)
+				playerNames[i].setText(temp[i]);
 
 		controlPanel = new JPanel();
 
@@ -120,6 +126,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		cancelBtn = new JButton("CANCEL");
 
 		goBtn.addActionListener(this);
+		cancelBtn.addActionListener(this);
 
 		JPanel tempPanel = new JPanel();
 		controlPanel.setLayout(new GridLayout(3, 1, 15, 15));
@@ -140,11 +147,15 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		tempPanel.add(goBtn);
 		tempPanel.add(cancelBtn);
 		controlPanel.add(tempPanel);
+	
+		
+		sendMessageToPlayers("addPlayer" + playerNum, 100000);
 
+		this.addWindowListener(new ExitListener(this));
 		this.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
 		this.setLayout(new GridBagLayout());
 		setLayout();
-		this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.setResizable(false);
 		this.setVisible(true);
@@ -172,17 +183,20 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 
 	}
 	
-	private void getNumPlayers() {
+	private String[] getPlayerInfo() {
 		sendMessageToPlayers("count", 500);
+		String[] temp = new String[4];
 		while (true) {
 			try {
 			    byte[] buffer = new byte[1000];
 			    DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
 			    cSocket.receive(datagram);
 			    String message = new String(datagram.getData());
-			    System.out.println(message);
-			    if (message.contains("received"))
-			    	playerNum++;
+			    if (message.contains("received")) {
+			    	message.substring(message.indexOf("received") - 1, 1);
+			    	int playerNum = Integer.parseInt(message.substring(message.indexOf("received") - 1, 1));
+			    	temp[playerNum] = message.substring(message.indexOf("received") + "received ".length());
+			    }
 			} catch (IOException e) {
 				try {
 					cSocket.setSoTimeout(100000);
@@ -192,7 +206,18 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 				break;
 			}
 		}
+		for (int i = 0; i < temp.length; i++) {
+			if (temp[i] == null) {
+				playerNum = i;
+				break;
+			}
+		}
+		if (playerNum == -1) {
+			System.out.println("All spots full.");
+			System.exit(1);
+		}
 		System.out.println(playerNum);
+		return temp;
 	}
 
 	public void sendMessageToPlayers(String message, int timeout) {
@@ -205,29 +230,74 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			System.out.println(ex);
 		}
 	}
+	
+	public String getUsername() {
+		return playerNames[playerNum].getText();
+	}
+	
+	
+	public void changeNumReady(int numReady) {
+		numReadyPlayers += numReady;
+	}
+	
+	
+	public void changePlayerCount(int playerCount) {
+		numPlayers += playerCount;
+	}
+	
+	public void updateTextForPlayer(int playerToChange, String text) {
+		playerNames[playerToChange].setText(text);
+	}
+	
+	public void updateGoBtn() {
+		goBtn.setText(goBtnStatus + " (" + numReadyPlayers + "/" + numPlayers + ")");
+	}
+	
+	public void disconnect() {
+		sendMessageToPlayers("disconnect" + playerNum, 1000);
+		try {
+			cSocket.leaveGroup(group);
+			listener.stop();
+		} catch (IOException e) {
+			System.exit(0);
+		}
+		cSocket.close();
+	}
+	
+	public void startGame() {
+//		disconnect();
+//		dispose();
+//		new DrawScreen(playerNames[playerNum].getText());
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		Object source = arg0.getSource();
 
 		if (source == goBtn) {
-			Player[] playersInfo = new Player[4];
-			for (int i = 0; i < playerNames.length; i++) {
-				String playerName = playerNames[i].getText();
-				if (!playerName.isEmpty())
-					playersInfo[i] = new Player(i, playerName);
+			if (playerReady) {
+				goBtnStatus = "READY";
+				goBtn.setBackground(Color.GRAY);
+				sendMessageToPlayers("unready" + playerNum, 100000);
+			} else if (!playerReady) {
+				goBtnStatus = "UNREADY";
+				goBtn.setBackground(Color.GREEN);
+				sendMessageToPlayers("ready" + playerNum, 100000);
 			}
-
-			new DrawScreen(playersInfo);
+			playerReady = !playerReady;
+			
+			if (numReadyPlayers == numPlayers && numPlayers > 1)
+				sendMessageToPlayers("start", 100000);
+				
+		} else if (source == cancelBtn) {
+			disconnect();
 			this.dispose();
 		}
 
 	}
 
 	@Override
-	public void changedUpdate(DocumentEvent arg0) {
-		sendMessageToPlayers("updateTextField" + playerNum + " " + playerNames[playerNum].getText(), 1000);
-	}
+	public void changedUpdate(DocumentEvent arg0) { ; }
 
 	@Override
 	public void insertUpdate(DocumentEvent arg0) {

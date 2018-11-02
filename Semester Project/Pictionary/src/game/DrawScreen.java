@@ -30,7 +30,7 @@ public class DrawScreen implements ActionListener {
 	private JPanel guessPanel;
 	private JPanel guessPanelControls;
 	
-	private String playerTemp;
+	private String playerName;
 	private JTextPane guessLog;
 	private JScrollPane pane;
 	private JTextField guessText;
@@ -40,7 +40,7 @@ public class DrawScreen implements ActionListener {
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
 	
-	public DrawScreen(Player[] playersInfo) {
+	public DrawScreen(String playerName) {
 		drawArea = new DrawPanel();
 		drawArea.setBorder(BorderFactory.createLineBorder(Color.black));
 		guessPanel = new JPanel();
@@ -75,7 +75,7 @@ public class DrawScreen implements ActionListener {
 		
 //		guessLog.setContentType("text/html");
 		guessPanel.setLayout(new GridBagLayout());
-		playerTemp = playersInfo[0].getPlayerName();
+		this.playerName = playerName;
 		setGuessPanelLayout();
 		
 		
@@ -134,9 +134,9 @@ public class DrawScreen implements ActionListener {
 		
 		if (source == guessBtn) {
 			if (guessLog.getText().equals(""))
-				guessLog.setText(guessLog.getText() + playerTemp + ": " + guessText.getText());
+				guessLog.setText(guessLog.getText() + playerName + ": " + guessText.getText());
 			else
-				guessLog.setText(guessLog.getText() + "\n" + playerTemp + ": " + guessText.getText());
+				guessLog.setText(guessLog.getText() + "\n" + playerName + ": " + guessText.getText());
 			guessText.setText("");
 			
 		}
