@@ -4,21 +4,24 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketTimeoutException;
 
 public class SocketListener implements Runnable {
 	
 	private MulticastSocket cSocket;
 	private InetAddress group;
 	private boolean clientQuit = false;
+	private int playerNum;
+	private final String receivedCode = "updateTextField";
 	
-	public SocketListener(MulticastSocket socket, InetAddress group) {
+	public SocketListener(MulticastSocket socket, InetAddress group, int playerNum) {
 		cSocket = socket;
 		this.group = group;
+		this.playerNum = playerNum;
 	}
 
 	@Override
 	public void run() {
-		sendTextToChat("test1");
 		while (!clientQuit) {
 			try {
 			    byte[] buffer = new byte[1000];
@@ -26,15 +29,24 @@ public class SocketListener implements Runnable {
 			    cSocket.receive(datagram);
 			    String message = new String(datagram.getData());
 			    System.out.println(message);
+			    
+			    if (message.contains("count")) {
+			    	sendMessageToPlayers("received");
+			    } else if (message.startsWith(receivedCode)) {
+			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(receivedCode) + receivedCode.length()));
+			    	if (playerNumToUpdate != playerNum) {
+			    		
+			    	}
+			    }
+			} catch (SocketTimeoutException e) {
+				continue;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
-		
+		}	
 	}
 	
-	public void sendTextToChat(String message) {
-	      message = message+"\n";
+	public void sendMessageToPlayers(String message) {
 	      byte[] buf = (message).getBytes();
 	      DatagramPacket dg = new DatagramPacket(buf, buf.length, group, 6789);
 	      try { 
@@ -44,5 +56,4 @@ public class SocketListener implements Runnable {
 	         System.out.println(ex);
 	      }
 	   }
-	
 }
