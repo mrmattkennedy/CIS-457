@@ -13,6 +13,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -22,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import player.Player;
+import player.SocketListener;
 
 public class MainGame extends JFrame implements ActionListener {
 	
@@ -46,7 +49,9 @@ public class MainGame extends JFrame implements ActionListener {
 	private static final int HEIGHT = 450;
 	
 	
-	public MainGame() {
+	public MainGame(MulticastSocket socket, InetAddress group) {
+		Thread listener = new Thread(new SocketListener(socket, group));
+		listener.start();
 		panelFont = new Font("Calibri", Font.PLAIN, 18);
 		playerPanel = new JPanel();
 		

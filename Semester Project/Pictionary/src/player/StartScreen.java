@@ -62,12 +62,12 @@ public class StartScreen implements ActionListener {
 				socket = new MulticastSocket(port);
 		        group = InetAddress.getByName(address);
 		        socket.joinGroup(group);
+				frame.dispose();
+				frame = new MainGame(socket, group);
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-//			frame.dispose();
-			frame = new MainGame();
 			
 		}
 		
