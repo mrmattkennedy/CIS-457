@@ -18,6 +18,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -31,6 +32,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -59,6 +61,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	private Thread listener;
 	private boolean playerReady = false;
 	private String goBtnStatus = "READY";
+	private DrawScreen screen;
 	
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
@@ -66,6 +69,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	public MainGame(MulticastSocket socket, InetAddress group) {
 		cSocket = socket;
 		this.group = group;
+		screen = null;
 		String[] temp = getPlayerInfo();
 		listener = new Thread(new SocketListener(socket, group, playerNum, this));
 		listener.start();
@@ -152,7 +156,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		controlPanel.add(tempPanel);
 	
 		
-		sendMessageToPlayers("newPlayer", 100000);
+		sendMessageToPlayers("newPlayer" + playerNum, 100000);
 
 		this.addWindowListener(new ExitListener(this));
 		this.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
@@ -244,6 +248,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	}
 	
 	public void resetReadyCount() {
+		System.out.println("reset ready " + playerNum);
 		numReadyPlayers = 0;
 	}
 	
@@ -253,6 +258,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	}
 	
 	public void resetPlayerCount() {
+		System.out.println("reset players " + playerNum);
 		numPlayers = 0;
 	}
 	
@@ -282,11 +288,28 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		cSocket.close();
 	}
 	
-	public void startGame() {
-		System.out.println("Starting");
-		dispose();
-		new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum);
 	
+	public DrawScreen startGame() {
+		//Invoke and wait necessary for concurrency in EDT thread for Swing utilities.
+		//Can't use invokeLater due to screen being assigned, so the run block will be skipped
+		//and screen will be null.
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					System.out.println("Starting");
+					dispose();
+					screen = new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum, listener);
+				}
+			});
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return screen;
 	}
 
 	@Override
@@ -307,13 +330,12 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			}
 			
 			try {
-				Thread.sleep(100);
+				Thread.sleep(200);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				;
 			}
 			System.out.println(numReadyPlayers + " : " +  numPlayers);
-			if (numReadyPlayers == numPlayers)
+			if (numReadyPlayers == numPlayers && numPlayers > 1)
 				sendMessageToPlayers("start", 100000);
 				
 		} else if (source == cancelBtn) {

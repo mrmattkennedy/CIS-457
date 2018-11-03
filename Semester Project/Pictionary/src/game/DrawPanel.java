@@ -18,20 +18,14 @@ public class DrawPanel extends JPanel implements MouseListener {
 	private Graphics2D g2;
 	private boolean onPanel;
 	private JPanel thisPanel;
+	private DrawScreen paFrame;
 	
 	volatile private boolean isRunning = false;
 	
-	public DrawPanel() {
+	public DrawPanel(DrawScreen paFrame) {
 		thisPanel = this;
-		
-//		frame = new JFrame();
+		this.paFrame = paFrame;
 		addMouseListener(this);
-//		frame.getContentPane().add(this);
-//		frame.setSize(new Dimension(400, 205));
-//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		frame.setLocationRelativeTo(null);
-//		frame.setResizable(false);
-//		frame.setVisible(true);
 	}
 	
 	@Override
@@ -88,6 +82,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 	                    	x2 = (int) p.getX();
 	                    	y2 = (int) p.getY();
 	                    	repaint();
+	                    	updateAllPanels();
 	                    	try {
 								Thread.sleep(20);
 							} catch (InterruptedException e) {
@@ -101,7 +96,15 @@ public class DrawPanel extends JPanel implements MouseListener {
 	    }
 	}
 	
-	public static void main(String[] args) {
-		new DrawPanel();
+	private void updateAllPanels() {
+		paFrame.updatePanel(x1, y1, x2, y2);
+	}
+	
+	public void updateDrawing(int x1, int y1, int x2, int y2) {
+		this.x1 = x1;
+		this.x2 = x2;
+		this.y1 = y1;
+		this.y2 = y2;
+		repaint();
 	}
 }

@@ -9,6 +9,7 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
+import game.DrawScreen;
 import game.MainGame;
 
 public class SocketListener implements Runnable {
@@ -25,7 +26,10 @@ public class SocketListener implements Runnable {
 	private final static String numReadyCode = "numReady";
 	private final static String newPlayerCode = "newPlayer";
 	private final static String addPlayerCode = "addPlayer";
+	private final static String newMessageCode = "newMessage";
+	private final static String updateDrawingCode = "updateDrawing";
 	private MainGame player;
+	private DrawScreen screen;
 	
 	public SocketListener(MulticastSocket socket, InetAddress group, int playerNum, MainGame player) {
 		cSocket = socket;
@@ -63,12 +67,13 @@ public class SocketListener implements Runnable {
 		    		player.updateGoBtn();
 		    		
 			    } else if (message.startsWith(startCode)) {
-			    	player.startGame();
+			    	screen = player.startGame();
+			    	if (screen == null)
+			    		System.exit(1);
 			    	
 			    } else if (message.startsWith(newPlayerCode)) {
 			    	player.resetPlayerCount();
 			    	player.resetReadyCount();
-			    	System.out.println(playerNum + ", 0:0");;
 			    	sendMessageToPlayers(addPlayerCode + playerNum);
 			    	
 			    	
@@ -92,6 +97,29 @@ public class SocketListener implements Runnable {
 			    	player.changeNumReady(-1);
 		    		player.updateGoBtn();
 			    		
+		    	//screen section
+			    } else if (message.startsWith(newMessageCode)) {
+//			    	System.out.println(message.indexOf(newMessageCode) + " ::: " + message.indexOf);
+			    	screen.updateLog(message.substring(message.indexOf(newMessageCode) + newMessageCode.length()));
+			    	
+			    } else if (message.startsWith(updateDrawingCode)) {
+			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(updateDrawingCode) + updateDrawingCode.length()));
+			    	if (playerNumSent != playerNum) {
+			    		String x1 = message.substring(message.indexOf("_") + 1, message.indexOf(","));
+			    		String y1 = message.substring(message.indexOf(x1) + x1.length() + 1, 
+			    				message.indexOf(",", message.indexOf(x1) + x1.length() + 1));
+			    		
+			    		String x2 = message.substring(message.indexOf(y1) + y1.length() + 1, 
+			    				message.indexOf(",", message.indexOf(y1) + y1.length() + 1));
+			    		
+			    		String y2 = message.substring(message.indexOf(x2, message.indexOf(y1)) + x2.length() + 1,
+			    				message.indexOf(",", message.indexOf(x2, message.indexOf(y1)) + x2.length() + 1));
+//			    		System.out.println(x1 + ", " + y1 + ", " + x2 + ", " + y2);
+			    		screen.addDrawingToPanel(Integer.parseInt(x1),
+			    				Integer.parseInt(y1),
+			    				Integer.parseInt(x2),
+			    				Integer.parseInt(y2));
+			    	}
 			    	
 			    } else if (message.startsWith(disconnectCode)) {
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(disconnectCode) + disconnectCode.length()));
@@ -102,13 +130,14 @@ public class SocketListener implements Runnable {
 			    	player.updateGoBtn();
 			    }
 			} catch (SocketTimeoutException e) {
-				player.disconnect();
-			} catch (SocketException e) {
 				try {
 					cSocket.setSoTimeout(100000);
 				} catch (SocketException e1) {
 					continue;
 				}
+				
+			} catch (SocketException e) {
+				player.disconnect();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
