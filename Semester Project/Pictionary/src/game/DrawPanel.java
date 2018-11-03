@@ -24,14 +24,14 @@ public class DrawPanel extends JPanel implements MouseListener {
 	public DrawPanel() {
 		thisPanel = this;
 		
-		frame = new JFrame();
+//		frame = new JFrame();
 		addMouseListener(this);
-		frame.getContentPane().add(this);
-		frame.setSize(new Dimension(400, 205));
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLocationRelativeTo(null);
-		frame.setResizable(false);
-		frame.setVisible(true);
+//		frame.getContentPane().add(this);
+//		frame.setSize(new Dimension(400, 205));
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		frame.setLocationRelativeTo(null);
+//		frame.setResizable(false);
+//		frame.setVisible(true);
 	}
 	
 	@Override

@@ -5,6 +5,9 @@ package game;
 //datagram packet to request player nums, get highest response.
 //reuse components by replacing panel, then replacing. not necessary
 //add increment on players.. currently adds in context, but need to reset?
+//player added - call to group, reset group completely, then new call to group to add 1 new add call per player
+//impossible to do, message goes to all 4 players, how to check to 
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -149,7 +152,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		controlPanel.add(tempPanel);
 	
 		
-		sendMessageToPlayers("addPlayer" + playerNum, 100000);
+		sendMessageToPlayers("newPlayer", 100000);
 
 		this.addWindowListener(new ExitListener(this));
 		this.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
@@ -240,9 +243,21 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		numReadyPlayers += numReady;
 	}
 	
+	public void resetReadyCount() {
+		numReadyPlayers = 0;
+	}
+	
 	
 	public void changePlayerCount(int playerCount) {
 		numPlayers += playerCount;
+	}
+	
+	public void resetPlayerCount() {
+		numPlayers = 0;
+	}
+	
+	public boolean getPlayerReady() {
+		return playerReady;
 	}
 	
 	public void updateTextForPlayer(int playerToChange, String text) {
@@ -254,6 +269,9 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	}
 	
 	public void disconnect() {
+		if (playerReady) 
+			sendMessageToPlayers("unready", 100000);
+		
 		sendMessageToPlayers("disconnect" + playerNum, 1000);
 		try {
 			cSocket.leaveGroup(group);
@@ -265,9 +283,10 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	}
 	
 	public void startGame() {
-//		disconnect();
-//		dispose();
-//		new DrawScreen(playerNames[playerNum].getText());
+		System.out.println("Starting");
+		dispose();
+		new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum);
+	
 	}
 
 	@Override
@@ -278,15 +297,23 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			if (playerReady) {
 				goBtnStatus = "READY";
 				goBtn.setBackground(Color.GRAY);
+				playerReady = !playerReady;
 				sendMessageToPlayers("unready" + playerNum, 100000);
 			} else if (!playerReady) {
 				goBtnStatus = "UNREADY";
 				goBtn.setBackground(Color.GREEN);
+				playerReady = !playerReady;
 				sendMessageToPlayers("ready" + playerNum, 100000);
 			}
-			playerReady = !playerReady;
 			
-			if (numReadyPlayers == numPlayers && numPlayers > 1)
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println(numReadyPlayers + " : " +  numPlayers);
+			if (numReadyPlayers == numPlayers)
 				sendMessageToPlayers("start", 100000);
 				
 		} else if (source == cancelBtn) {

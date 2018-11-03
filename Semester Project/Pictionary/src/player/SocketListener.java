@@ -22,8 +22,9 @@ public class SocketListener implements Runnable {
 	private final static String readyCode = "ready";
 	private final static String unreadyCode = "unready";
 	private final static String startCode = "start";
-	private final static String getPlayersCode = "getPlayers";
 	private final static String numReadyCode = "numReady";
+	private final static String newPlayerCode = "newPlayer";
+	private final static String addPlayerCode = "addPlayer";
 	private MainGame player;
 	
 	public SocketListener(MulticastSocket socket, InetAddress group, int playerNum, MainGame player) {
@@ -53,8 +54,9 @@ public class SocketListener implements Runnable {
 			    		player.updateTextForPlayer(playerNumToUpdate, text);
 			    	}
 			    } else if (message.startsWith(readyCode)) {
-			    		player.changeNumReady(1);
-			    		player.updateGoBtn();
+			    	player.changeNumReady(1);
+			    	player.updateGoBtn();
+			    	
 		
 			    } else if (message.startsWith(unreadyCode)) {
 			    	player.changeNumReady(-1);
@@ -63,9 +65,28 @@ public class SocketListener implements Runnable {
 			    } else if (message.startsWith(startCode)) {
 			    	player.startGame();
 			    	
-			    } else if (message.startsWith(getPlayersCode)) {
+			    } else if (message.startsWith(newPlayerCode)) {
+			    	player.resetPlayerCount();
+			    	player.resetReadyCount();
+			    	System.out.println(playerNum + ", 0:0");;
+			    	sendMessageToPlayers(addPlayerCode + playerNum);
+			    	
+			    	
+			    } else if (message.startsWith(addPlayerCode)) {
+			    	/*check player num necessary. Consider the following:
+			    	 * player 0 is ready, then player 1 joins.
+			    	 * player 1 sends newPlayerCode, which is sent to group.
+			    	 * That in turn sends out addPlayerCode (this) to everyone in group.
+			    	 * player 0 and 1 both get addPlayerCode, twice per, so 4 times.
+			    	 * Have to check if the player code is not the same, 
+			    	 * so each player is only added once per.
+			    	 */
 			    	player.changePlayerCount(1);
+			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(addPlayerCode) + addPlayerCode.length()));
+			    	if (player.getPlayerReady() && playerNumSent != playerNum)
+			    		sendMessageToPlayers(readyCode);			    	
 			    	player.updateGoBtn();
+			    	
 			    	
 			    } else if (message.startsWith(numReadyCode)) {
 			    	player.changeNumReady(-1);
@@ -81,6 +102,8 @@ public class SocketListener implements Runnable {
 			    	player.updateGoBtn();
 			    }
 			} catch (SocketTimeoutException e) {
+				player.disconnect();
+			} catch (SocketException e) {
 				try {
 					cSocket.setSoTimeout(100000);
 				} catch (SocketException e1) {

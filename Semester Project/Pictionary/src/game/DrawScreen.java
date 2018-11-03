@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.font.TextAttribute;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
@@ -18,6 +20,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
@@ -31,7 +34,7 @@ public class DrawScreen implements ActionListener {
 	private JPanel guessPanelControls;
 	
 	private String playerName;
-	private JTextPane guessLog;
+	private JTextArea guessLog;
 	private JScrollPane pane;
 	private JTextField guessText;
 	private JButton guessBtn;
@@ -40,7 +43,7 @@ public class DrawScreen implements ActionListener {
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
 	
-	public DrawScreen(String playerName) {
+	public DrawScreen(String playerName, MulticastSocket socket, InetAddress group, int playerNum) {
 		drawArea = new DrawPanel();
 		drawArea.setBorder(BorderFactory.createLineBorder(Color.black));
 		guessPanel = new JPanel();
@@ -50,11 +53,11 @@ public class DrawScreen implements ActionListener {
 		
 		frame.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
 		frame.setLayout(new GridBagLayout());
-		setLayout();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.setResizable(false);
 		frame.setVisible(true);
+		setLayout();
 		
 		guessPanelControls = new JPanel();
 		guessText = new JTextField();
@@ -66,17 +69,19 @@ public class DrawScreen implements ActionListener {
 		
 		guessPanelControls.add(guessText);
 		guessPanelControls.add(guessBtn);
-		guessPanelControls.setBorder(BorderFactory.createLineBorder(Color.black));
+		guessPanelControls.setBorder(BorderFactory.createLineBorder(Color.red));
 		
-		guessLog = new JTextPane();
-		guessLog.setEditable(false);
-//		guessLog.setBorder(BorderFactory.createLineBorder(Color.red));
-		pane = new JScrollPane(guessLog);
+//		guessLog.setEditable(false);
+		
+//		pane = new JScrollPane();
+//		pane.setBorder(BorderFactory.createLineBorder(Color.red));
 		
 //		guessLog.setContentType("text/html");
-		guessPanel.setLayout(new GridBagLayout());
+//		guessPanel.setLayout(new GridBagLayout());
 		this.playerName = playerName;
-		setGuessPanelLayout();
+//		guessPanel.add(guessLog);
+		guessPanel.add(guessPanelControls);
+//		setGuessPanelLayout();
 		
 		
 //		guessPanel.add(guessLog);
@@ -114,7 +119,7 @@ public class DrawScreen implements ActionListener {
 		gbCons.gridwidth = 1;
 		gbCons.gridwidth = 2;
 		gbCons.weightx = 1;
-		gbCons.weighty = 0.1;
+		gbCons.weighty = 1;
 		gbCons.ipady = (int) (HEIGHT);
 		guessPanel.add(pane, gbCons);
 		
