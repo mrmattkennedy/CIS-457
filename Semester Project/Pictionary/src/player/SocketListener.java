@@ -111,7 +111,7 @@ public class SocketListener implements Runnable {
 			    		
 			    		String x2 = message.substring(message.indexOf(y1) + y1.length() + 1, 
 			    				message.indexOf(",", message.indexOf(y1) + y1.length() + 1));
-			    		
+			    		//y1 is part of x1, blows up.
 			    		String y2 = message.substring(message.indexOf(x2, message.indexOf(y1)) + x2.length() + 1,
 			    				message.indexOf(",", message.indexOf(x2, message.indexOf(y1)) + x2.length() + 1));
 //			    		System.out.println(x1 + ", " + y1 + ", " + x2 + ", " + y2);
