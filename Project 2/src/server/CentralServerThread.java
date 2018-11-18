@@ -78,8 +78,12 @@ public class CentralServerThread extends Thread {
 	public void run() {
 		try {
 			while (true) {
-				String message = inFromClient.readLine().substring(2); // first 2 bytes are # bytes sent, so ignore.
+				String message = inFromClient.readLine();//.substring(2); // first 2 bytes are # bytes sent, so ignore. Only for add?...
 				String[] tokens = message.split("\t");
+				if (tokens[0].toUpperCase().contains("ADD"))
+					tokens[0] = "ADD";
+				else if (tokens[0].toUpperCase().contains("SEARCH"))
+					tokens[0] = "SEARCH";
 				System.out.println(message);
 				switch (tokens[0].toUpperCase()) {
 					case "ADD":
@@ -114,10 +118,11 @@ public class CentralServerThread extends Thread {
 						break;
 					case "SEARCH":
 						synchronized(files) {
+							System.out.println("searching");
 							for (FileInfo file : files) {
 								if (file.description.matches(tokens[1])) {
 									System.out.println("Found " + file.fileName);
-									outToClient.writeUTF(file.fileName + "\t" + file.description + "\t" + file.host.username + "\t" + file.host.hostName + "\n");
+									outToClient.writeUTF(file.fileName + "\t" + file.description + "\t" + file.host.username + "\t" + file.host.hostName + "\t" + file.host.connectionSpeed + "\n");
 								}
 							}
 							outToClient.writeUTF("\n");

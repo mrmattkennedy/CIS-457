@@ -35,7 +35,6 @@ class CentralClient {
     if (filename.contains("\t") || description.contains("\t")) {
       return false;
     }
-    System.out.println("adding");
     outToServer.writeUTF("ADD\t" + filename + "\t" + description + "\n");
     outToServer.flush();
     return true;
@@ -64,14 +63,15 @@ class CentralClient {
     
     outToServer.writeUTF("SEARCH\t" + regex + "\n");
     ArrayList<FileInfo> results = new ArrayList<FileInfo>();
-    String lineIn = inFromServer.readLine().trim();
+    @SuppressWarnings("deprecation")
+	String lineIn = inFromServer.readLine().trim();
     System.out.println(lineIn + "\n");
-    while (lineIn.length() < 0) {
+    while (lineIn.length() > 0) {
       String[] splitLine = lineIn.split("\t");
-      if (splitLine.length != 4) {
+      if (splitLine.length != 5) {
         System.out.println(lineIn.length());
       }
-      results.add(new FileInfo(splitLine[0], splitLine[1], new ClientInfo(splitLine[2], "", splitLine[3])));
+      results.add(new FileInfo(splitLine[0], splitLine[1], new ClientInfo(splitLine[2], splitLine[4], splitLine[3])));
       lineIn = inFromServer.readLine().trim();
     }
     return results;

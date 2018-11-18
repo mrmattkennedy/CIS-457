@@ -21,6 +21,8 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +64,7 @@ public class UserClient implements ActionListener {
 	private JButton searchBtn;
 	private FileTableModel tableModel;
 	private JTable fileTable;
-	public JScrollPane pane;	
+	public JScrollPane pane;
 	
 	private JPanel commandPanel;
 	private JTextField commandText;
@@ -121,13 +123,14 @@ public class UserClient implements ActionListener {
 		
 		searchField.setPreferredSize(new Dimension(200, 30));
 		searchBtn.setPreferredSize(new Dimension(100, 30));
+		searchBtn.addActionListener(this);
 		pane.setPreferredSize(new Dimension(WIDTH - 100, HEIGHT / 4));
 		fileTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		searchPanel.add(new JLabel("Keyword"));
 		searchPanel.add(searchField);
 		searchPanel.add(searchBtn);
-		searchPanel.add(new JScrollPane(pane));
+		searchPanel.add(pane);
 		
 		
 		commandPanel = new JPanel();
@@ -137,15 +140,15 @@ public class UserClient implements ActionListener {
 		
 		commandText.setPreferredSize(new Dimension(300, 30));
 		commandBtn.setPreferredSize(new Dimension(100, 30));
+		commandBtn.addActionListener(this);
 		commandLog.setPreferredSize(new Dimension(WIDTH - 100, HEIGHT / 8));
-		commandLog.setContentType("text/html");
+//		commandLog.setContentType("text/html");
+		commandLog.setEditable(false);
 		
 		commandPanel.add(new JLabel("Enter command: "));
 		commandPanel.add(commandText);
 		commandPanel.add(commandBtn);
-		commandPanel.add(commandLog);
-		
-		
+		commandPanel.add(new JScrollPane(commandLog));
 		
 		connectPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		searchPanel.setBorder(BorderFactory.createLineBorder(Color.black));
@@ -203,69 +206,85 @@ public class UserClient implements ActionListener {
 		Object source = arg0.getSource();
 		
 		if (source == connectBtn) {
-			String str = "";
-//			try {
-//				str = getXMLFile();
-//			} catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}				
-//			String speed = (String)(connection.getSelectedItem());
-//			String host = userHost.getText();
-//			String user = username.getText();
-//			for (int i = 0; i < names.size(); i++)
-//				tableModel.addVariable(speed, host, names.get(i), user);
+			if (serverHost.getText().isEmpty() || serverPort.getText().isEmpty() || username.getText().isEmpty() || userHost.getText().isEmpty()) {
+				JOptionPane.showMessageDialog(null, "Input is empty. Failed to connect.");
+				return;
+			}			
 //			tableModel.repaintTable();
-			
-			JOptionPane.showMessageDialog(null, "Please select the XML file.");
-			JFileChooser chooser = new JFileChooser();
-			chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
-			chooser.showSaveDialog(null);
-			File xmlFile = chooser.getSelectedFile();
-			if (chooser.getSelectedFile() == null) {
-				System.out.println("No file selected.");
+			connect();			
+		} else if (source == searchBtn) {
+			if (!searchField.getText().isEmpty()) {
+				try {
+					List<FileInfo> temp = client.Search(searchField.getText());
+					for (FileInfo file : temp)
+						tableModel.addFile(file.host.connectionSpeed, file.host.hostName, file.host.username, file.fileName);
+					tableModel.repaintTable();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				JOptionPane.showMessageDialog(null, "Search field is empty. Failed to connect.");
 				return;
 			}
+		} else if (source == commandBtn) {
+			String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")).toString();
+			if (commandLog.getText().isEmpty())
+				commandLog.setText("[" + time + "]: " + commandText.getText());
+			else
+				commandLog.setText(commandLog.getText() + "\n" + "[" + time + "]: " + commandText.getText());
+			commandText.setText("");
+		}
+	}
+	
+	private void connect() {
+		JOptionPane.showMessageDialog(null, "Please select the XML file.");
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		chooser.showSaveDialog(null);
+		File xmlFile = chooser.getSelectedFile();
+		if (chooser.getSelectedFile() == null) {
+			System.out.println("No file selected.");
+			return;
+		}
+		
+		try {
+			InetAddress addr = InetAddress.getByName(serverHost.getText());
+			client = new CentralClient(addr, Integer.parseInt(serverPort.getText()));
+			client.Set(username.getText(), connection.getSelectedItem().toString());
+//			Thread listener = new Thread(client);
+//			listener.start();
 			
-			try {
-				InetAddress addr = InetAddress.getByName(serverHost.getText());
-				client = new CentralClient(addr, Integer.parseInt(serverPort.getText()));
-//				Thread listener = new Thread(client);
-//				listener.start();
+			BufferedReader br = new BufferedReader(new FileReader(xmlFile)); 
+			  
+			String line, str = "";
+			while ((line = br.readLine()) != null) 
+				str += line;
+			br.close();
+			
+			int nameIndex = 0;
+			int descriptionIndex = 0;
+			List<String> names = new ArrayList<String>();
+			List<String> descriptions = new ArrayList<String>();
+			while (true) {
+				names.add(str.substring(str.indexOf("<name>", nameIndex ) + 6, str.indexOf("</name>", nameIndex)));
+				descriptions.add(str.substring(str.indexOf("<description>", descriptionIndex ) + 13, str.indexOf("</description>", descriptionIndex)));
 				
-				BufferedReader br = new BufferedReader(new FileReader(xmlFile)); 
-				  
-				String line;
-				while ((line = br.readLine()) != null) 
-					str += line;
-				
-				System.out.println(str);
-				
-				int nameIndex = 0;
-				int descriptionIndex = 0;
-				List<String> names = new ArrayList<String>();
-				List<String> descriptions = new ArrayList<String>();
-				while (true) {
-					names.add(str.substring(str.indexOf("<name>", nameIndex ) + 6, str.indexOf("</name>", nameIndex)));
-					descriptions.add(str.substring(str.indexOf("<description>", descriptionIndex ) + 13, str.indexOf("</description>", descriptionIndex)));
-					
-					nameIndex = str.indexOf("</name>", nameIndex) + 1; //sets starting point to most recent name tag
-					descriptionIndex = str.indexOf("</description>", descriptionIndex) + 1; //sets starting point to most recent description tag
-					if (str.indexOf("<name>", nameIndex) == -1) //checks location of next name tag
-						break;
-					else if (str.indexOf("<description>", descriptionIndex) == -1) //checks location of next name tag
-						break;
-				}
-				
-				for (int i = 0; i < names.size(); i++) {
-					if (!client.Add(names.get(i), descriptions.get(i)))
-						return;
-				}
-				
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				nameIndex = str.indexOf("</name>", nameIndex) + 1; //sets starting point to most recent name tag
+				descriptionIndex = str.indexOf("</description>", descriptionIndex) + 1; //sets starting point to most recent description tag
+				if (str.indexOf("<name>", nameIndex) == -1) //checks location of next name tag
+					break;
+				else if (str.indexOf("<description>", descriptionIndex) == -1) //checks location of next name tag
+					break;
 			}
+			
+			for (int i = 0; i < names.size(); i++) {
+				if (!client.Add(names.get(i), descriptions.get(i)))
+					return;
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
