@@ -15,15 +15,19 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -65,12 +69,11 @@ public class UserClient implements ActionListener {
 	private JButton commandBtn;
 	private JTextPane commandLog;
 	
-	private Socket controlSocket;
-	private DataOutputStream outToServer;
-	private DataInputStream inFromServer;
 	private JFrame frame;
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
+	
+	private CentralClient client;
 	
 	
 	public UserClient() {
@@ -200,35 +203,69 @@ public class UserClient implements ActionListener {
 		Object source = arg0.getSource();
 		
 		if (source == connectBtn) {
-//			String str = "";
+			String str = "";
 //			try {
 //				str = getXMLFile();
 //			} catch (Exception e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
-//			}
-//			int nameIndex = 0;
-//			List<String> names = new ArrayList<String>();
-//			while (true) {
-//				names.add(str.substring(str.indexOf("<name>", nameIndex ) + 6, str.indexOf("</name>", nameIndex)));
-//				nameIndex = str.indexOf("</name>", nameIndex) + 1; //sets starting point to most recent name tag
-//				if (str.indexOf("<name>", nameIndex) == -1) //checks location of next name tag
-//					break;
-//			}
-//				
+//			}				
 //			String speed = (String)(connection.getSelectedItem());
 //			String host = userHost.getText();
 //			String user = username.getText();
 //			for (int i = 0; i < names.size(); i++)
 //				tableModel.addVariable(speed, host, names.get(i), user);
 //			tableModel.repaintTable();
-			Thread sListen = new Thread(new SocketListener(serverHost.getText(), 
-					serverPort.getText(),
-					(String)(connection.getSelectedItem()),
-					userHost.getText(),
-					username.getText(),
-					this));
-			sListen.start();
+			
+			JOptionPane.showMessageDialog(null, "Please select the XML file.");
+			JFileChooser chooser = new JFileChooser();
+			chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+			chooser.showSaveDialog(null);
+			File xmlFile = chooser.getSelectedFile();
+			if (chooser.getSelectedFile() == null) {
+				System.out.println("No file selected.");
+				return;
+			}
+			
+			try {
+				InetAddress addr = InetAddress.getByName(serverHost.getText());
+				client = new CentralClient(addr, Integer.parseInt(serverPort.getText()));
+//				Thread listener = new Thread(client);
+//				listener.start();
+				
+				BufferedReader br = new BufferedReader(new FileReader(xmlFile)); 
+				  
+				String line;
+				while ((line = br.readLine()) != null) 
+					str += line;
+				
+				System.out.println(str);
+				
+				int nameIndex = 0;
+				int descriptionIndex = 0;
+				List<String> names = new ArrayList<String>();
+				List<String> descriptions = new ArrayList<String>();
+				while (true) {
+					names.add(str.substring(str.indexOf("<name>", nameIndex ) + 6, str.indexOf("</name>", nameIndex)));
+					descriptions.add(str.substring(str.indexOf("<description>", descriptionIndex ) + 13, str.indexOf("</description>", descriptionIndex)));
+					
+					nameIndex = str.indexOf("</name>", nameIndex) + 1; //sets starting point to most recent name tag
+					descriptionIndex = str.indexOf("</description>", descriptionIndex) + 1; //sets starting point to most recent description tag
+					if (str.indexOf("<name>", nameIndex) == -1) //checks location of next name tag
+						break;
+					else if (str.indexOf("<description>", descriptionIndex) == -1) //checks location of next name tag
+						break;
+				}
+				
+				for (int i = 0; i < names.size(); i++) {
+					if (!client.Add(names.get(i), descriptions.get(i)))
+						return;
+				}
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	

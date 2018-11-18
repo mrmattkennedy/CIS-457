@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.EOFException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -18,14 +19,14 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**********************************************************************
- * FTP ServerThread class for Project 1. This is where the server processes
- * commands for the client. The controlSocket is already created and sent in to
- * the constructor of the class. No static variables because everything is out
- * of the run() method.
- * 
- * @author Matt Kennedy, Colton Bates, Parker Skarzynski, Noah Verdeyen
- *
- *********************************************************************/
+* FTP ServerThread class for Project 1. This is where the server processes
+* commands for the client. The controlSocket is already created and sent in to
+* the constructor of the class. No static variables because everything is out
+* of the run() method.
+*
+* @author Matt Kennedy, Colton Bates, Parker Skarzynski, Noah Verdeyen
+*
+*********************************************************************/
 public class CentralServerThread extends Thread {
 
 	/** controlSocket that reads and sends commands to client. */
@@ -34,40 +35,34 @@ public class CentralServerThread extends Thread {
 	/** Stream to write commands and info to client. */
 	protected DataOutputStream outToClient;
 
-	/** Stream to read commands and info from client. */
-	private BufferedReader inFromClient;
+	protected BufferedReader inFromClient;
 
-	/**
-	 * List to hold tokens from the client. The size varies, so a list is easier to
-	 * use than a String object.
-	 */
-	private List<String> clientTokens;
+	private String hostName;
 
-	/** The command the client sent to the server. */
-	private String clientCommand;
+	Vector<ClientInfo> clients;
+	Vector<FileInfo> files;
+	Vector<FileInfo> myFiles = new Vector<FileInfo>();
 
-	/** Determines if the infinite loop should continue. */
-	private boolean serverGo;
-	
-	private String xmlFile = "";
-
-	private static Vector<CentralServerThread> clients = new Vector<CentralServerThread>();
-	
-	private static String allXMLFiles = "";
-	
+	ClientInfo self;
 
 	/******************************************************************
-	 * Constructor for the serverThread. Initializes the streams using the
-	 * controlSocket sent in.
-	 * 
-	 * @param controlSocket Control Socket for the client/server connection.
-	 * @param port          The port the server will run on.
-	 *****************************************************************/
-	public CentralServerThread(Socket controlSocket, int port) {
-		serverGo = true;
+	* Constructor for the serverThread. Initializes the streams using the
+	* controlSocket sent in.
+	*
+	* @param controlSocket Control Socket for the client/server connection.
+	* @param port          The port the server will run on.
+	*****************************************************************/
+	public CentralServerThread(Socket controlSocket, int port, Vector<ClientInfo> clients, Vector<FileInfo> files) {
+		this.clients = clients;
+		this.files = files;
 		this.controlSocket = controlSocket;
-		clientTokens = new ArrayList<String>();
-		clients.add(this);
+		hostName = controlSocket.getInetAddress().getHostName();
+
+		System.out.println(files);
+
+		self = new ClientInfo("unnamed", "Dial-Up", hostName);
+		clients.add(self);
+
 		try {
 			outToClient = new DataOutputStream(controlSocket.getOutputStream());
 			inFromClient = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
@@ -82,53 +77,64 @@ public class CentralServerThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			xmlFile = inFromClient.readLine().substring(2);
-			System.out.println("xml file is " + xmlFile);
-			allXMLFiles += xmlFile + "|";
-			broadcast(allXMLFiles);
-			while (serverGo) {
-				// Block until a command is read from the client.
-				String fromClient = inFromClient.readLine();
-				System.out.println(fromClient);
-				// Clear the array list that held client commands.
-//				clientTokens.clear();
-//				StringTokenizer tokens = null;
-//
-//				// If the client quit, then fromClient is null sometimes.
-//				// Helps prevent potential issues.
-//				if (!(fromClient == null)) {
-//					// Recreate tokenizer.
-//					tokens = new StringTokenizer(fromClient);
-//
-//					while (tokens.hasMoreTokens())
-//						clientTokens.add(tokens.nextToken());
-//
-//					System.out.println(clientTokens);
-//
-//					// If the size > 1, the command is 1. Ex quit command.
-//					// Used for when a port is necessary for a data connection.
-//					if (clientTokens.size() > 1)
-//						clientCommand = clientTokens.get(1);
-//					else
-//						clientCommand = clientTokens.get(0);
-//				} else
-//					clientCommand = "quit";
-//
-//				// Quit command.
-//				if (clientCommand.equals("quit")) {
-//					System.out.println("Closing connection " + controlSocket.getInetAddress().getHostName() + ".");
-//					outToClient.close();
-//					inFromClient.close();
-//					controlSocket.close();
-//					serverGo = false;
-//					return;
-//				}
+			while (true) {
+				String message = inFromClient.readLine().substring(2); // first 2 bytes are # bytes sent, so ignore.
+				String[] tokens = message.split("\t");
+				System.out.println(message);
+				switch (tokens[0].toUpperCase()) {
+					case "ADD":
+						FileInfo newFile = new FileInfo(tokens[1], tokens.length > 2 ? tokens[2] : "", self);
+						synchronized(files) {
+							files.add(newFile);
+						}
+						myFiles.add(newFile);
+						System.out.println(self.username + " added " + tokens[1]);
+						break;
+					case "REMOVE":
+						synchronized(files) {
+							for (FileInfo file : myFiles) {
+								if (file.fileName.equals(tokens[1])) {
+									files.remove(file);
+									System.out.println(self.username + " removed " + tokens[1]);
+								} else {
+									System.out.println(self.username + " attempted to remove " + tokens[1]);
+								}
+							}
+						}
+					break;
+					case "SET":
+						if (tokens[1].length() > 0) {
+							System.out.println(self.username + " is now " + tokens[1]);
+							self.username = tokens[1];
+						}
+						if (tokens.length > 2 && tokens[2].length() > 0) {
+							System.out.println(self.username + " now has speed " + tokens[2]);
+							self.connectionSpeed = tokens[2];
+						}
+						break;
+					case "SEARCH":
+						synchronized(files) {
+							for (FileInfo file : files) {
+								if (file.description.matches(tokens[1])) {
+									System.out.println("Found " + file.fileName);
+									outToClient.writeUTF(file.fileName + "\t" + file.description + "\t" + file.host.username + "\t" + file.host.hostName + "\n");
+								}
+							}
+							outToClient.writeUTF("\n");
+						}
+				}
 			}
+		} catch (NullPointerException e) {		// Connection closed
 		} catch (Exception e) {
 			System.out.println("Error " + e.toString());
 			e.printStackTrace();
 		} finally {
 			try {
+				System.out.println(self.username + " left.");
+				synchronized(files) {
+					files.removeAll(myFiles);
+				}
+				clients.remove(self);
 				outToClient.close();
 				inFromClient.close();
 				controlSocket.close();
@@ -136,42 +142,6 @@ public class CentralServerThread extends Thread {
 				return;
 			}
 		}
-	}
 
-	/******************************************************************
-	 * Creates a data socket for the server and client to send data over.
-	 * 
-	 * @param port The port the server will run on.
-	 * @return Socket The dataSocket object.
-	 *****************************************************************/
-	private Socket makeDataSocket(int port) {
-		System.out.println("Making data socket...");
-		try {
-			return new Socket(controlSocket.getInetAddress(), port);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	protected static void broadcast(String message) {
-		synchronized (clients) {
-			Enumeration<CentralServerThread> e = clients.elements();
-			
-			while (e.hasMoreElements()) {
-				CentralServerThread client = e.nextElement();
-				try {
-					client.outToClient.writeUTF("updateTable:");
-					client.outToClient.writeUTF(message);
-					client.outToClient.flush();
-				} catch (IOException ex) {
-					try {
-						client.join();
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
-				}
-			}
-		}
 	}
 }

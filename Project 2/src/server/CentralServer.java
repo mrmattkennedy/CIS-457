@@ -2,25 +2,25 @@ package server;
 
 import java.io.*;
 import java.net.*;
-
+import java.util.Vector;
 
 /**********************************************************************
- * FTP Server class for Project 1. Doesn't do a great deal. Creates a 
+ * FTP Server class for Project 1. Doesn't do a great deal. Creates a
  * welcomeSocket that performs the handshake operation for incoming
  * connections, then creates a new thread for the controlSocket.
- * 
+ *
  * @author Matt Kennedy, Colton Bates, Parker Skarzynski, Noah Verdeyen
  *
  *********************************************************************/
 public class CentralServer {
 	private static int port = 11230;
 	private static ServerSocket welcomeSocket;
-	private static int currentSocket = 0;
-	private static boolean serverGo = true;
-	
+	public static Vector<ClientInfo> clients = new Vector<ClientInfo>();
+	public static Vector<FileInfo> files = new Vector<FileInfo>();
+
 	/******************************************************************
 	 * Infinite loop here to constantly accept connections and make new
-	 * server threads. 
+	 * server threads.
 	 * @param argv Args sent in from user from command line.
 	 *****************************************************************/
 	public static void main(String[] args) {
@@ -38,7 +38,7 @@ public class CentralServer {
 			}
 		//Declare here so finally block can try to close later.
 		welcomeSocket = null;
-		
+
 		try {
 			//Create this socket to perform handshake.
 			welcomeSocket = new ServerSocket(port);
@@ -47,15 +47,14 @@ public class CentralServer {
 			 * the server shouldn't close (supports multiple clients).
 			 * When to close the server?
 			 */
-			while (serverGo) {
+			while (true) {
 				//Block until new connection accepted.
 				Socket controlSocket = welcomeSocket.accept();
-				
-                System.out.println("Accepting connection from " + 
-                		controlSocket.getInetAddress().getHostName() +  
-                		", connection #" + ++currentSocket);
+
+                System.out.println("Accepting connection from " +
+                		controlSocket.getInetAddress().getHostName());
                 //Create new server thread.
-                Thread server = new CentralServerThread(controlSocket, port);
+                Thread server = new CentralServerThread(controlSocket, port, clients, files);
                 server.start();
 			}
 		} catch (SocketException e) {
