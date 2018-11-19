@@ -210,7 +210,6 @@ public class UserClient implements ActionListener {
 				JOptionPane.showMessageDialog(null, "Input is empty. Failed to connect.");
 				return;
 			}			
-//			tableModel.repaintTable();
 			connect();			
 		} else if (source == searchBtn) {
 			if (!searchField.getText().isEmpty()) {
@@ -273,7 +272,7 @@ public class UserClient implements ActionListener {
 				descriptionIndex = str.indexOf("</description>", descriptionIndex) + 1; //sets starting point to most recent description tag
 				if (str.indexOf("<name>", nameIndex) == -1) //checks location of next name tag
 					break;
-				else if (str.indexOf("<description>", descriptionIndex) == -1) //checks location of next name tag
+				else if (str.indexOf("<description>", descriptionIndex) == -1) //checks location of next description tag
 					break;
 			}
 			

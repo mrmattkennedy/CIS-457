@@ -35,7 +35,7 @@ public class CentralServerThread extends Thread {
 	/** Stream to write commands and info to client. */
 	protected DataOutputStream outToClient;
 
-	protected BufferedReader inFromClient;
+	protected DataInputStream inFromClient;
 
 	private String hostName;
 
@@ -65,7 +65,7 @@ public class CentralServerThread extends Thread {
 
 		try {
 			outToClient = new DataOutputStream(controlSocket.getOutputStream());
-			inFromClient = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
+			inFromClient = new DataInputStream(controlSocket.getInputStream());
 		} catch (IOException e) {
 			System.out.println("Error " + e.getLocalizedMessage());
 		}
@@ -78,13 +78,8 @@ public class CentralServerThread extends Thread {
 	public void run() {
 		try {
 			while (true) {
-				String message = inFromClient.readLine();//.substring(2); // first 2 bytes are # bytes sent, so ignore. Only for add?...
+				String message = inFromClient.readUTF();
 				String[] tokens = message.split("\t");
-				if (tokens[0].toUpperCase().contains("ADD"))
-					tokens[0] = "ADD";
-				else if (tokens[0].toUpperCase().contains("SEARCH"))
-					tokens[0] = "SEARCH";
-				System.out.println(message);
 				switch (tokens[0].toUpperCase()) {
 					case "ADD":
 						FileInfo newFile = new FileInfo(tokens[1], tokens.length > 2 ? tokens[2] : "", self);
@@ -122,14 +117,21 @@ public class CentralServerThread extends Thread {
 							for (FileInfo file : files) {
 								if (file.description.matches(tokens[1])) {
 									System.out.println("Found " + file.fileName);
-									outToClient.writeUTF(file.fileName + "\t" + file.description + "\t" + file.host.username + "\t" + file.host.hostName + "\t" + file.host.connectionSpeed + "\n");
+									outToClient.writeUTF(file.fileName + "\t" + file.description + "\t" + file.host.username + "\t" + file.host.hostName + "\t" + file.host.connectionSpeed);
 								}
 							}
-							outToClient.writeUTF("\n");
+							outToClient.writeUTF("END");
 						}
+						break;
+					default:
+						System.out.println("Bad cmd: " + message + ":\t\"" + (tokens[0].length()) + "\"");
+						for (char c : tokens[0].toCharArray()) {
+							System.out.print((int)c + " ");
+						}
+						System.out.println("");
 				}
 			}
-		} catch (NullPointerException e) {		// Connection closed
+		} catch (EOFException e) {		// Connection closed
 		} catch (Exception e) {
 			System.out.println("Error " + e.toString());
 			e.printStackTrace();

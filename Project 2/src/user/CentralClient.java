@@ -19,23 +19,11 @@ class CentralClient {
 			inFromServer = new DataInputStream(new BufferedInputStream(serverConnection.getInputStream()));
   }
   
-//  @Override
-//  public void run() {
-//	  while (true) {
-//		  try {
-//			  String message = inFromServer.readUTF();
-//		  } catch (Exception e) {
-//			  e.printStackTrace();
-//		  }
-//	  }
-//  	
-//  }
-
   public Boolean Add(String filename, String description) throws IOException {
     if (filename.contains("\t") || description.contains("\t")) {
       return false;
     }
-    outToServer.writeUTF("ADD\t" + filename + "\t" + description + "\n");
+    outToServer.writeUTF("ADD\t" + filename + "\t" + description);
     outToServer.flush();
     return true;
   }
@@ -44,7 +32,7 @@ class CentralClient {
     if (filename.contains("\t")) {
       return false;
     }
-    outToServer.writeUTF("REMOVE\t" + filename + "\n");
+    outToServer.writeUTF("REMOVE\t" + filename);
     return true;
   }
 
@@ -52,7 +40,7 @@ class CentralClient {
     if (username.contains("\t") || connection.contains("\t")) {
       return false;
     }
-    outToServer.writeUTF("SET\t" + username + "\t" + connection + "\n");
+    outToServer.writeUTF("SET\t" + username + "\t" + connection);
     return true;
   }
 
@@ -60,19 +48,17 @@ class CentralClient {
     if (regex.contains("\t")) {
       return null;
     }
-    
-    outToServer.writeUTF("SEARCH\t" + regex + "\n");
+
+    outToServer.writeUTF("SEARCH\t" + regex);
     ArrayList<FileInfo> results = new ArrayList<FileInfo>();
-    @SuppressWarnings("deprecation")
-	String lineIn = inFromServer.readLine().trim();
-    System.out.println(lineIn + "\n");
-    while (lineIn.length() > 0) {
+	String lineIn = inFromServer.readUTF();
+    while (!lineIn.equals("END")) {
       String[] splitLine = lineIn.split("\t");
       if (splitLine.length != 5) {
         System.out.println(lineIn.length());
       }
       results.add(new FileInfo(splitLine[0], splitLine[1], new ClientInfo(splitLine[2], splitLine[4], splitLine[3])));
-      lineIn = inFromServer.readLine().trim();
+      lineIn = inFromServer.readUTF();
     }
     return results;
   }

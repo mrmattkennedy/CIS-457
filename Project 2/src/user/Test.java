@@ -15,10 +15,12 @@ public class Test {
 		cc.Set("snsiox", "super");
 		System.out.println("t");
 		cc.Add("Yes", "No");
+		cc.Add("Possibly", "Totes not a virus");
+		cc.Remove("Yes");
 		System.out.println("a");
-		//List<FileInfo> lr = cc.Search("o");
-		//for (FileInfo f : lr) {
-		//	System.out.println(f.fileName);
-		//}
+		List<FileInfo> lr = cc.Search(".*o.*");
+		for (FileInfo f : lr) {
+			System.out.println(f.fileName);
+		}
 	}
 }
