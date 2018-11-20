@@ -4,17 +4,31 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.file.Path;
+import java.util.Hashtable;
 
 
 public class FileServer implements Runnable {
 	private ServerSocket welcomeSocket;
 	private int port;
 	private String fileName;
+	
+	private Hashtable<String, Path> fileTable;
 
-	public FileServer(int port, String fileName) throws IOException {
+	public FileServer(int port) throws IOException {
 		this.port = port;
-		this.fileName = fileName;
+		fileTable = new Hashtable<String, Path>();
 	}
+	
+	public Boolean Add(String file, Path path) {
+        synchronized (fileTable) {
+            if (fileTable.containsKey(file)) {
+                return false;
+            }
+            fileTable.put(file, path);
+        }
+        return true;
+    }
 
 	@Override
 	public void run() {
@@ -32,7 +46,7 @@ public class FileServer implements Runnable {
 
 				System.out.println("Accepting connection from " + controlSocket.getInetAddress().getHostName());
 				// Create new server thread.
-				Thread server = new Thread(new FileServerThread(contolSocket, fileName))
+				Thread server = new Thread(new FileServerThread(controlSocket, fileTable));
 				server.start();
 			}
 		} catch (SocketException e) {

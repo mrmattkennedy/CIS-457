@@ -90,16 +90,21 @@ public class CentralServerThread extends Thread {
 						System.out.println(self.username + " added " + tokens[1]);
 						break;
 					case "REMOVE":
+                        ArrayList<FileInfo> filesToRemove = new ArrayList<FileInfo>();
 						synchronized(files) {
 							for (FileInfo file : myFiles) {
 								if (file.fileName.equals(tokens[1])) {
 									files.remove(file);
+									filesToRemove.add(file);
 									System.out.println(self.username + " removed " + tokens[1]);
 								} else {
 									System.out.println(self.username + " attempted to remove " + tokens[1]);
 								}
 							}
 						}
+						for (FileInfo file : filesToRemove) {
+                            myFiles.remove(file);
+                        }
 					break;
 					case "SET":
 						if (tokens[1].length() > 0) {

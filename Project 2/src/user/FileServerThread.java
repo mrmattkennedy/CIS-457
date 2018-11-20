@@ -3,32 +3,55 @@ package user;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.util.Hashtable;
+import java.io.IOException;
 
 public class FileServerThread implements Runnable {
+
+    private Hashtable<String, Path> fileTable;
+    private Socket controlSocket;
+    
+    private DataInputStream inFromClient;
+    private DataOutputStream outToClient;
 	
-	public FileServerThread(int )
+	public FileServerThread(Socket socket, Hashtable<String, Path> table) throws IOException {
+        controlSocket = socket;
+        fileTable = table;
+        inFromClient = new DataInputStream(controlSocket.getInputStream());
+        outToClient = new DataOutputStream(controlSocket.getOutputStream());
+    }
 
 	@Override
-	public void run() {
-		String filePath = System.getProperty("user.dir") + "/";
-		File fileToSend = new File(filePath + clientTokens.get(2));
+	public void run(){
+	try {
+        String filename = inFromClient.readUTF();
+        Path filePath;
+        synchronized (fileTable) {
+            if (fileTable.containsKey(filename)) {
+                filePath = fileTable.get(filename);
+            } else {
+                outToClient.writeInt(9001);
+                outToClient.flush();
+                controlSocket.close();
+                return;
+            }
+        }
+		File fileToSend = filePath.toFile();
 		
 		//If the file doesn't exist, status code 550 (error).
 		if (!fileToSend.exists()) {
 			System.out.println("File does not exist.");
 			outToClient.writeInt(550);
-			continue;
+			outToClient.flush();
+			controlSocket.close();
 		} else {
 			//If all good, open dataSocket on given port.
 			outToClient.writeInt(200);
-			Socket dataSocket = makeDataSocket(Integer.parseInt(clientTokens.get(0)));
-			DataOutputStream outData = 
-					new DataOutputStream(
-					new BufferedOutputStream(dataSocket.getOutputStream()));
-			//Use BufferedInputStream to read file in as bytes.
 			FileInputStream fis = new FileInputStream(fileToSend);
 			BufferedInputStream bis = new BufferedInputStream(fis);
 			
@@ -40,17 +63,16 @@ public class FileServerThread implements Runnable {
 			//Read bytes into byte array bytesToSend.
 			bis.read(bytesToSend, 0, (int)length);
 			//Send the size of the file to the client.
-			outData.writeInt((int)length);
+			outToClient.writeInt((int)length);
 			//Send the byte array.
-			outData.write(bytesToSend);
+			outToClient.write(bytesToSend);
 			//Helps clear stream before closing.
-			outData.flush();
-			outData.close();
+			outToClient.flush();
+			outToClient.close();
 			bis.close();
 			fis.close();
-			dataSocket.close();
+			controlSocket.close();
 		}
-		
+	} catch (Exception e) {}
 	}
-	
 }

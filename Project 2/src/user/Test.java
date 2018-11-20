@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.net.InetAddress;
 import java.util.List;
 
@@ -11,16 +13,10 @@ import javax.swing.JFileChooser;
 
 public class Test {
 	public static void main(String[] args) throws IOException {
-		CentralClient cc = new CentralClient(InetAddress.getLocalHost(), 11230);
-		cc.Set("snsiox", "super");
-		System.out.println("t");
-		cc.Add("Yes", "No");
-		cc.Add("Possibly", "Totes not a virus");
-		cc.Remove("Yes");
-		System.out.println("a");
-		List<FileInfo> lr = cc.Search(".*o.*");
-		for (FileInfo f : lr) {
-			System.out.println(f.fileName);
-		}
+		FileServer pot = new FileServer(9874);
+		pot.Add("q2.pdf", Paths.get("/home/batescol/q2.pdf"));
+		Thread thread = new Thread(pot);
+		thread.start();
+		
 	}
 }
