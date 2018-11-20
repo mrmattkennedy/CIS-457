@@ -245,9 +245,7 @@ public class UserClient implements ActionListener {
 					DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
 					
 					outData.writeUTF(fileInfo[1]);
-					int status = inData.readInt();
-					
-					
+					int status = inData.readInt();					
 					
 					if (status == 200) {
 						byte[] dataIn = new byte[inData.readInt()];
@@ -255,7 +253,7 @@ public class UserClient implements ActionListener {
 						//Read the bytes for the file in.
 						inData.readFully(dataIn);
 						
-						File filePath = new File(System.getProperty("user.dir"));
+						File filePath = new File(System.getProperty("user.dir") + "/" + fileInfo[1]);
 						//Write bytes to file.
 						try (FileOutputStream fos = new FileOutputStream(filePath)) {
 							   fos.write(dataIn);
@@ -318,15 +316,17 @@ public class UserClient implements ActionListener {
 			}
 			
 			fileServer = new FileServer();
-			Thread fileServerThread = new Thread(fileServer);
-			fileServerThread.start();
 			
 			for (int i = 0; i < names.size(); i++) {
-				if (!client.Add(names.get(i), descriptions.get(i)) && 
-						!fileServer.Add(names.get(i), Paths.get(System.getProperty("user.dir") + "/" + names.get(i))))
+				if (!client.Add(names.get(i), descriptions.get(i)) || 
+						!fileServer.Add(names.get(i), Paths.get(System.getProperty("user.dir") + "/" + names.get(i)))) {
+					System.out.println("nope");
 					return;
+				}
 			}
 			
+			Thread fileServerThread = new Thread(fileServer);
+			fileServerThread.start();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
