@@ -14,7 +14,7 @@ import java.util.Hashtable;
 import java.io.IOException;
 
 public class FileServerThread implements Runnable {
-
+    // File table
     private Hashtable<String, Path> fileTable;
     private Socket controlSocket;
     
@@ -32,6 +32,7 @@ public class FileServerThread implements Runnable {
 	@Override
 	public void run(){
 	try {
+        // Read filename as first thing
         String filename = inFromClient.readUTF();
         Path filePath;
         
@@ -39,7 +40,7 @@ public class FileServerThread implements Runnable {
             if (fileTable.containsKey(filename)) {
                 filePath = fileTable.get(filename);
             } else {
-                outToClient.writeInt(9001);
+                outToClient.writeInt(9001); // Nice error code
                 outToClient.flush();
                 controlSocket.close();
                 return;
@@ -54,7 +55,6 @@ public class FileServerThread implements Runnable {
 			outToClient.flush();
 			controlSocket.close();
 		} else {
-			//If all good, open dataSocket on given port.
 			outToClient.writeInt(200);
 			FileInputStream fis = new FileInputStream(fileToSend);
 			BufferedInputStream bis = new BufferedInputStream(fis);

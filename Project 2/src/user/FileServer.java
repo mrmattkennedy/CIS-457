@@ -10,15 +10,17 @@ import java.util.Hashtable;
 
 public class FileServer implements Runnable {
 	private ServerSocket welcomeSocket;
-	private int port = 10000;
-	private String fileName;
+	private int port = 10000; // Hard-coded
 	
+	// Correlates names to file paths
 	private Hashtable<String, Path> fileTable;
 
 	public FileServer() throws IOException {
 		fileTable = new Hashtable<String, Path>();
 	}
 	
+	// Add a file to the server. If the server gets a request for
+	// the filename, it will read the file at path to the client
 	public Boolean Add(String file, Path path) {
         synchronized (fileTable) {
             if (fileTable.containsKey(file)) {
