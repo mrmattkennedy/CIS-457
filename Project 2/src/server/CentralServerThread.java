@@ -114,6 +114,7 @@ public class CentralServerThread extends Thread {
 						if (tokens.length > 2 && tokens[2].length() > 0) {
 							System.out.println(self.username + " now has speed " + tokens[2]);
 							self.connectionSpeed = tokens[2];
+							self.hostName = tokens[3];
 						}
 						break;
 					case "SEARCH":

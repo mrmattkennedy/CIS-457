@@ -287,7 +287,7 @@ public class UserClient implements ActionListener {
 		try {
 			InetAddress addr = InetAddress.getByName(serverHost.getText());
 			client = new CentralClient(addr, Integer.parseInt(serverPort.getText()));
-			client.Set(username.getText(), connection.getSelectedItem().toString());
+			client.Set(username.getText(), connection.getSelectedItem().toString(), userHost.getText());
 //			Thread listener = new Thread(client);
 //			listener.start();
 			
@@ -319,7 +319,6 @@ public class UserClient implements ActionListener {
 			for (int i = 0; i < names.size(); i++) {
 				if (!client.Add(names.get(i), descriptions.get(i)) || 
 						!fileServer.Add(names.get(i), Paths.get(System.getProperty("user.dir") + "/" + names.get(i)))) {
-					System.out.println("nope");
 					return;
 				}
 			}

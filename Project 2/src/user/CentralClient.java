@@ -36,11 +36,11 @@ class CentralClient {
     return true;
   }
 
-  public Boolean Set(String username, String connection) throws IOException {
-    if (username.contains("\t") || connection.contains("\t")) {
+  public Boolean Set(String username, String connection, String hostname) throws IOException {
+    if (username.contains("\t") || connection.contains("\t") || hostname.contains("\t")) {
       return false;
     }
-    outToServer.writeUTF("SET\t" + username + "\t" + connection);
+    outToServer.writeUTF("SET\t" + username + "\t" + connection +  "\t" + hostname);
     return true;
   }
 
