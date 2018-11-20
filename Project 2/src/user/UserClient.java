@@ -232,7 +232,7 @@ public class UserClient implements ActionListener {
 				JOptionPane.showMessageDialog(null, "Search field is empty. Failed to connect.");
 				return;
 			}
-		} else if (source == commandBtn) {commandText.setText("");
+		} else if (source == commandBtn) {
 			String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")).toString();
 			if (commandLog.getText().isEmpty())
 				commandLog.setText("[" + time + "]: " + commandText.getText());
@@ -277,7 +277,7 @@ public class UserClient implements ActionListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (Exception e) {
-				System.out.println("Error parsing command.");
+				commandLog.setText(commandLog.getText() + "\n" + "Error downloading file");
 				
 			} finally {
 				commandText.setText("");
