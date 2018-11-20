@@ -232,7 +232,7 @@ public class UserClient implements ActionListener {
 				JOptionPane.showMessageDialog(null, "Search field is empty. Failed to connect.");
 				return;
 			}
-		} else if (source == commandBtn) {
+		} else if (source == commandBtn) {commandText.setText("");
 			String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")).toString();
 			if (commandLog.getText().isEmpty())
 				commandLog.setText("[" + time + "]: " + commandText.getText());
@@ -263,7 +263,10 @@ public class UserClient implements ActionListener {
 						//Write bytes to file.
 						try (FileOutputStream fos = new FileOutputStream(filePath)) {
 							   fos.write(dataIn);
-						}						
+						}
+						commandLog.setText(commandLog.getText() + "\n" + "Successfully downloaded " + fileInfo[1]);
+					} else {
+						commandLog.setText(commandLog.getText() + "\n" + "Failed to download download " + fileInfo[1]);
 					}
 					socket.close();
 				}
