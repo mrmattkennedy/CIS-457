@@ -246,7 +246,7 @@ public class UserClient implements ActionListener {
 					
 					outData.writeUTF(fileInfo[1]);
 					int status = inData.readInt();					
-					
+					System.out.println(status);
 					if (status == 200) {
 						byte[] dataIn = new byte[inData.readInt()];
 						
@@ -257,10 +257,9 @@ public class UserClient implements ActionListener {
 						//Write bytes to file.
 						try (FileOutputStream fos = new FileOutputStream(filePath)) {
 							   fos.write(dataIn);
-						}
-						socket.close();
-						
+						}						
 					}
+					socket.close();
 				} catch (UnknownHostException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

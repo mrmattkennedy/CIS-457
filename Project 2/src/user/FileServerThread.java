@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.io.IOException;
 
@@ -32,7 +34,14 @@ public class FileServerThread implements Runnable {
 	try {
         String filename = inFromClient.readUTF();
         Path filePath;
+        
         synchronized (fileTable) {
+        	 Enumeration e = fileTable.elements();
+
+        	  while (e.hasMoreElements())
+        	  {
+        		  System.out.println(Arrays.toString((String[]) e.nextElement()));
+        	  }
             if (fileTable.containsKey(filename)) {
                 filePath = fileTable.get(filename);
             } else {
