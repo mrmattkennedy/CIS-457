@@ -36,12 +36,6 @@ public class FileServerThread implements Runnable {
         Path filePath;
         
         synchronized (fileTable) {
-        	 Enumeration e = fileTable.elements();
-
-        	  while (e.hasMoreElements())
-        	  {
-        		  System.out.println(Arrays.toString((String[]) e.nextElement()));
-        	  }
             if (fileTable.containsKey(filename)) {
                 filePath = fileTable.get(filename);
             } else {
