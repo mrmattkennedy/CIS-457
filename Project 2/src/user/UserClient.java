@@ -79,6 +79,7 @@ public class UserClient implements ActionListener {
 	
 	private CentralClient client;
 	private FileServer fileServer;
+	private boolean isConnected = false;
 	
 	
 	public UserClient() {
@@ -213,6 +214,9 @@ public class UserClient implements ActionListener {
 				JOptionPane.showMessageDialog(null, "Input is empty. Failed to connect.");
 				return;
 			}			
+			if (isConnected) {
+				return;
+			}
 			connect();			
 		} else if (source == searchBtn) {
 			if (!searchField.getText().isEmpty()) {
@@ -235,18 +239,20 @@ public class UserClient implements ActionListener {
 			else
 				commandLog.setText(commandLog.getText() + "\n" + "[" + time + "]: " + commandText.getText());
 			
-			String command = commandText.getText();
-			String[] temp = command.split(" ");
-			if (temp[0].equals("GET") || temp[0].equals("REQUEST")) {
-				String[] fileInfo = temp[1].split("/");
-				try {
+			try {
+				String command = commandText.getText();
+				String[] temp = new String[2];
+				temp[0] = command.substring(0, command.indexOf(" "));
+				temp[1] = command.substring(command.indexOf(" ") + 1);
+				if (temp[0].equals("GET") || temp[0].equals("REQUEST")) {
+					String[] fileInfo = temp[1].split("/");
+					
 					Socket socket = new Socket(fileInfo[0], 10000);
 					DataInputStream inData = new DataInputStream(socket.getInputStream());
 					DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
 					
 					outData.writeUTF(fileInfo[1]);
-					int status = inData.readInt();					
-					System.out.println(status);
+					int status = inData.readInt();	
 					if (status == 200) {
 						byte[] dataIn = new byte[inData.readInt()];
 						
@@ -260,16 +266,19 @@ public class UserClient implements ActionListener {
 						}						
 					}
 					socket.close();
-				} catch (UnknownHostException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				System.out.println("Error parsing command.");
 				
+			} finally {
+				commandText.setText("");
 			}
-			commandText.setText("");
 		}
 	}
 	
@@ -325,10 +334,10 @@ public class UserClient implements ActionListener {
 			
 			Thread fileServerThread = new Thread(fileServer);
 			fileServerThread.start();
+			isConnected = true;
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error connecting");
 		}
 	}
 	
