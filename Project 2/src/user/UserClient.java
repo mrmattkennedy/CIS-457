@@ -318,6 +318,8 @@ public class UserClient implements ActionListener {
 			}
 			
 			fileServer = new FileServer();
+			Thread fileServerThread = new Thread(fileServer);
+			fileServerThread.start();
 			
 			for (int i = 0; i < names.size(); i++) {
 				if (!client.Add(names.get(i), descriptions.get(i)) && 
