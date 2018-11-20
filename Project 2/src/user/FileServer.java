@@ -10,7 +10,7 @@ import java.util.Hashtable;
 
 public class FileServer implements Runnable {
 	private ServerSocket welcomeSocket;
-	private int port = 12000;
+	private int port = 10000;
 	private String fileName;
 	
 	private Hashtable<String, Path> fileTable;
