@@ -10,13 +10,12 @@ import java.util.Hashtable;
 
 public class FileServer implements Runnable {
 	private ServerSocket welcomeSocket;
-	private int port;
+	private int port = 12000;
 	private String fileName;
 	
 	private Hashtable<String, Path> fileTable;
 
-	public FileServer(int port) throws IOException {
-		this.port = port;
+	public FileServer() throws IOException {
 		fileTable = new Hashtable<String, Path>();
 	}
 	

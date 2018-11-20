@@ -15,12 +15,14 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -76,6 +78,7 @@ public class UserClient implements ActionListener {
 	private static final int HEIGHT = 450;
 	
 	private CentralClient client;
+	private FileServer fileServer;
 	
 	
 	public UserClient() {
@@ -231,6 +234,44 @@ public class UserClient implements ActionListener {
 				commandLog.setText("[" + time + "]: " + commandText.getText());
 			else
 				commandLog.setText(commandLog.getText() + "\n" + "[" + time + "]: " + commandText.getText());
+			
+			String command = commandText.getText();
+			String[] temp = command.split(" ");
+			if (temp[0].equals("GET") || temp[0].equals("REQUEST")) {
+				String[] fileInfo = temp[1].split("/");
+				try {
+					Socket socket = new Socket(fileInfo[0], 10000);
+					DataInputStream inData = new DataInputStream(socket.getInputStream());
+					DataOutputStream outData = new DataOutputStream(socket.getOutputStream());
+					
+					outData.writeUTF(fileInfo[1]);
+					int status = inData.readInt();
+					
+					
+					
+					if (status == 200) {
+						byte[] dataIn = new byte[inData.readInt()];
+						
+						//Read the bytes for the file in.
+						inData.readFully(dataIn);
+						
+						File filePath = new File(System.getProperty("user.dir"));
+						//Write bytes to file.
+						try (FileOutputStream fos = new FileOutputStream(filePath)) {
+							   fos.write(dataIn);
+						}
+						socket.close();
+						
+					}
+				} catch (UnknownHostException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
 			commandText.setText("");
 		}
 	}
@@ -276,10 +317,14 @@ public class UserClient implements ActionListener {
 					break;
 			}
 			
+			fileServer = new FileServer();
+			
 			for (int i = 0; i < names.size(); i++) {
-				if (!client.Add(names.get(i), descriptions.get(i)))
+				if (!client.Add(names.get(i), descriptions.get(i)) && 
+						!fileServer.Add(names.get(i), Paths.get(System.getProperty("user.dir") + "/" + names.get(i))))
 					return;
 			}
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

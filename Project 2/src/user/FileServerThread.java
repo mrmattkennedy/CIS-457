@@ -18,6 +18,7 @@ public class FileServerThread implements Runnable {
     
     private DataInputStream inFromClient;
     private DataOutputStream outToClient;
+   
 	
 	public FileServerThread(Socket socket, Hashtable<String, Path> table) throws IOException {
         controlSocket = socket;

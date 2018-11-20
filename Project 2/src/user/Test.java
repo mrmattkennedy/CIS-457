@@ -13,7 +13,7 @@ import javax.swing.JFileChooser;
 
 public class Test {
 	public static void main(String[] args) throws IOException {
-		FileServer pot = new FileServer(9874);
+		FileServer pot = new FileServer();
 		pot.Add("q2.pdf", Paths.get("/home/batescol/q2.pdf"));
 		Thread thread = new Thread(pot);
 		thread.start();
