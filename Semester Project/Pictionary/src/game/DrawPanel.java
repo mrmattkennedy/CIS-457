@@ -19,6 +19,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 	private boolean onPanel;
 	private JPanel thisPanel;
 	private DrawScreen paFrame;
+	private boolean removeGraphics = true;
 	
 	volatile private boolean isRunning = false;
 	
@@ -26,12 +27,26 @@ public class DrawPanel extends JPanel implements MouseListener {
 		thisPanel = this;
 		this.paFrame = paFrame;
 		addMouseListener(this);
+		repaint();
+	}
+	
+	public void addListener() {
+		addMouseListener(this);
+	}
+	
+	public void removeListener() {
+		isRunning = false;
+		removeMouseListener(this);
 	}
 	
 	@Override
 	protected void paintComponent(Graphics g) {
-		g2 = (Graphics2D)g;
-		g.drawLine(x1, y1, x2, y2);
+		if (removeGraphics) {
+			System.out.println("here");
+			super.paintComponent(g);
+			removeGraphics = false;
+		} else
+			g.drawLine(x1, y1, x2, y2);
 	}
 
 	@Override
@@ -98,6 +113,11 @@ public class DrawPanel extends JPanel implements MouseListener {
 	
 	private void updateAllPanels() {
 		paFrame.updatePanel(x1, y1, x2, y2);
+	}
+	
+	public void clearScreen() {
+		removeGraphics = true;
+		repaint();
 	}
 	
 	public void updateDrawing(int x1, int y1, int x2, int y2) {

@@ -18,6 +18,7 @@ public class SocketListener implements Runnable {
 	private InetAddress group;
 	private boolean clientQuit = false;
 	private int playerNum;
+	private int numPlayers = 0;
 	private final static String receivedCode = "updateTextField";
 	private final static String disconnectCode = "disconnect";
 	private final static String readyCode = "ready";
@@ -28,6 +29,9 @@ public class SocketListener implements Runnable {
 	private final static String addPlayerCode = "addPlayer";
 	private final static String newMessageCode = "newMessage";
 	private final static String updateDrawingCode = "updateDrawing";
+	private final static String clearScreenCode = "clearScreen";
+	private final static String nextDrawerCode = "nextDrawer";
+	private final static String updateTimeCode = "updateTime";
 	private MainGame player;
 	private DrawScreen screen;
 	
@@ -121,11 +125,22 @@ public class SocketListener implements Runnable {
 			    				Integer.parseInt(y2));
 			    	}
 			    	
+			    } else if (message.startsWith(clearScreenCode)) {
+			    	screen.clearScreen();
+			    	
+			    } else if (message.startsWith(nextDrawerCode)) {
+			    	screen.updateCurrentDrawer();
+			    	
+			    } else if (message.startsWith(updateTimeCode)) {
+			    	String time = message.substring(message.indexOf(updateTimeCode) + updateTimeCode.length());
+			    	screen.updateTimerLabel(time);
+			    	
 			    } else if (message.startsWith(disconnectCode)) {
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(disconnectCode) + disconnectCode.length()));
 			    	if (playerNumToUpdate != playerNum) {
 			    		player.updateTextForPlayer(playerNumToUpdate, "");
 			    	}
+			    	numPlayers--;
 			    	player.changePlayerCount(-1);
 			    	player.updateGoBtn();
 			    }
@@ -155,3 +170,5 @@ public class SocketListener implements Runnable {
 	      }
 	   }
 }
+
+

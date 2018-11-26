@@ -298,7 +298,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 				public void run() {
 					System.out.println("Starting");
 					dispose();
-					screen = new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum, listener);
+					screen = new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum, listener, numPlayers);
 				}
 			});
 		} catch (InvocationTargetException e) {
@@ -335,7 +335,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 				;
 			}
 			System.out.println(numReadyPlayers + " : " +  numPlayers);
-			if (numReadyPlayers == numPlayers && numPlayers > 1)
+			if (numReadyPlayers == numPlayers)// && numPlayers > 1)
 				sendMessageToPlayers("start", 100000);
 				
 		} else if (source == cancelBtn) {
