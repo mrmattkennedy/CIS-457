@@ -155,6 +155,13 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		tempPanel.add(cancelBtn);
 		controlPanel.add(tempPanel);
 	
+		if (playerNum != 0) {
+			difficultyChooser.setEnabled(false);
+			numRoundsChooser.setEnabled(false);
+		} else {
+			difficultyChooser.addActionListener(this);
+			numRoundsChooser.addActionListener(this);
+		}
 		
 		sendMessageToPlayers("newPlayer" + playerNum, 100000);
 
@@ -274,6 +281,22 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		goBtn.setText(goBtnStatus + " (" + numReadyPlayers + "/" + numPlayers + ")");
 	}
 	
+	public void updateDifficulty(int index) {
+		difficultyChooser.setSelectedIndex(index);
+	}
+	
+	public int getDifficultyIndex() {
+		return difficultyChooser.getSelectedIndex();
+	}
+	
+	public void updateNumRounds(int index) {
+		numRoundsChooser.setSelectedIndex(index);
+	}
+	
+	public int getRoundsIndex() {
+		return numRoundsChooser.getSelectedIndex();
+	}
+	
 	public void disconnect() {
 		if (playerReady) 
 			sendMessageToPlayers("unready", 100000);
@@ -315,7 +338,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		Object source = arg0.getSource();
-
+		
 		if (source == goBtn) {
 			if (playerReady) {
 				goBtnStatus = "READY";
@@ -341,6 +364,10 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		} else if (source == cancelBtn) {
 			disconnect();
 			this.dispose();
+		} else if (source == difficultyChooser) {
+			sendMessageToPlayers("difficulty" + difficultyChooser.getSelectedIndex(), 100000);
+		} else if (source == numRoundsChooser) {
+			sendMessageToPlayers("rounds" + numRoundsChooser.getSelectedIndex(), 100000);
 		}
 
 	}

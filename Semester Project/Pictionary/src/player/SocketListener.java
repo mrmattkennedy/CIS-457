@@ -27,6 +27,8 @@ public class SocketListener implements Runnable {
 	private final static String numReadyCode = "numReady";
 	private final static String newPlayerCode = "newPlayer";
 	private final static String addPlayerCode = "addPlayer";
+	private final static String difficultyCode = "difficulty";
+	private final static String numRoundsCode = "rounds";
 	private final static String newMessageCode = "newMessage";
 	private final static String updateDrawingCode = "updateDrawing";
 	private final static String clearScreenCode = "clearScreen";
@@ -75,11 +77,26 @@ public class SocketListener implements Runnable {
 			    	if (screen == null)
 			    		System.exit(1);
 			    	
+			    } else if (message.startsWith(difficultyCode)) {
+			    	if (playerNum != 0) {
+			    		int index = Character.getNumericValue(message.charAt(message.indexOf(difficultyCode) + difficultyCode.length()));
+			    		player.updateDifficulty(index);
+			    	}
+			    	
+			    } else if (message.startsWith(numRoundsCode)) {
+			    	if (playerNum != 0) {
+			    		int index = Character.getNumericValue(message.charAt(message.indexOf(numRoundsCode) + numRoundsCode.length()));
+			    		player.updateNumRounds(index);
+			    	}
+			    	
 			    } else if (message.startsWith(newPlayerCode)) {
 			    	player.resetPlayerCount();
 			    	player.resetReadyCount();
 			    	sendMessageToPlayers(addPlayerCode + playerNum);
-			    	
+			    	if (playerNum == 0) {
+			    		sendMessageToPlayers(difficultyCode + player.getDifficultyIndex());
+			    		sendMessageToPlayers(numRoundsCode + player.getRoundsIndex());
+			    	}			    	
 			    	
 			    } else if (message.startsWith(addPlayerCode)) {
 			    	/*check player num necessary. Consider the following:

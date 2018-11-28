@@ -59,6 +59,11 @@ public class DrawScreen implements ActionListener {
 	private JPanel drawControlsPanel;
 	private JButton clearBtn;
 	private JLabel timerLabel;
+	
+	private File three = new File("3.txt");
+	private File two = new File("2.txt");
+	private File one = new File("1.txt");
+	
 //	ArrayList<String> temp = new ArrayList<String>();
 
 	public DrawScreen(String playerName, MulticastSocket socket, InetAddress group, int playerNum, Thread listener, int numPlayers) {
@@ -116,6 +121,7 @@ public class DrawScreen implements ActionListener {
 		guessPanel.setLayout(new GridBagLayout());
 		this.playerName = playerName;
 		setGuessPanelLayout();
+		initializeFiles();
 		drawStart();
 	}
 
@@ -207,6 +213,13 @@ public class DrawScreen implements ActionListener {
 			sendMessageToPlayers("clearScreen");
 		}
 	}
+	
+	private void initializeFiles() {
+
+		three = new File("3.txt");
+		two = new File("2.txt");
+		one = new File("1.txt");
+	}
 
 	public void updateCurrentDrawer() {
 		currentDrawer = ++currentDrawer % numPlayers;
@@ -241,7 +254,7 @@ public class DrawScreen implements ActionListener {
 						}
 					}
 					sendMessageToPlayers("clearScreen");
-					sendMessageToPlayers("nextDrawer");
+					drawStart();
 				}
 			};
 			timer.start();
@@ -252,9 +265,6 @@ public class DrawScreen implements ActionListener {
 	}
 	
 	private void drawStart() {
-		File three = new File("3.txt");
-		File two = new File("2.txt");
-		File one = new File("1.txt");
 		drawArea.removeListener();
 		if (three.exists() && two.exists() && one.exists()) {
 			Thread timer = new Thread() {
