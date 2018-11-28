@@ -20,7 +20,9 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -39,8 +41,12 @@ public class DrawScreen implements ActionListener {
 
 	private JFrame frame;
 	private DrawPanel drawArea;
+	private JLabel topic;
 	private JPanel guessPanel;
 	private JPanel guessPanelControls;
+	private int numPoints = 0;
+	private int currRound = 0;
+	private int numRounds;
 
 	private String playerName;
 	private JTextPane guessLog;
@@ -59,21 +65,38 @@ public class DrawScreen implements ActionListener {
 	private JPanel drawControlsPanel;
 	private JButton clearBtn;
 	private JLabel timerLabel;
+	private static int time = 0;
 	
 	private File three = new File("3.txt");
 	private File two = new File("2.txt");
 	private File one = new File("1.txt");
+	private File topicWordsFile;
+	private String currentTopic;
+	private List<String> topicWords;
 	
 //	ArrayList<String> temp = new ArrayList<String>();
 
-	public DrawScreen(String playerName, MulticastSocket socket, InetAddress group, int playerNum, Thread listener, int numPlayers) {
+	public DrawScreen(String playerName, 
+			MulticastSocket socket, 
+			InetAddress group, 
+			int playerNum, 
+			Thread listener, 
+			int numPlayers, 
+			File topicWordsFile,
+			int numRounds) {
+		
 		this.cSocket = socket;
 		this.group = group;
 		this.listener = listener;
 		this.playerNum = playerNum;
 		this.numPlayers = numPlayers;
+		this.topicWordsFile = topicWordsFile;
+		this.numRounds = numRounds;
+		
 		System.out.println("Player num is" + playerNum);
 		drawArea = new DrawPanel(this);
+		topic = new JLabel("HIDDEN");
+		drawArea.add(topic);
 		drawArea.setBorder(BorderFactory.createLineBorder(Color.black));
 		guessPanel = new JPanel();
 		guessPanel.setBorder(BorderFactory.createLineBorder(Color.black));
@@ -122,7 +145,7 @@ public class DrawScreen implements ActionListener {
 		this.playerName = playerName;
 		setGuessPanelLayout();
 		initializeFiles();
-		System.out.println("Updating drawer" + playerNum);
+		initializetopicWordsFile();
 		sendMessageToPlayers("nextDrawer" + playerNum);
 	}
 
@@ -180,7 +203,6 @@ public class DrawScreen implements ActionListener {
 
 	public void updatePanel(int x1, int y1, int x2, int y2) {
 		sendMessageToPlayers("updateDrawing" + playerNum + "_" + x1 + "," + y1 + "," + x2 + "," + y2 + ",");
-//		temp.add("updateDrawing5" + "_" + x1 + "," + y1 + "," + x2 + "," + y2 + ",");
 	}
 
 	public void addDrawingToPanel(int x1, int y1, int x2, int y2) {
@@ -190,6 +212,13 @@ public class DrawScreen implements ActionListener {
 	public void updateTimerLabel(String time) {
 		timerLabel.setText("Time: " + time);
 	}
+	
+	public void updateTime() {
+		
+		guessBtn.setEnabled(false);
+		guessText.setEnabled(false);
+		DrawScreen.time = 0;
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -197,19 +226,11 @@ public class DrawScreen implements ActionListener {
 
 		if (source == guessBtn) {
 			sendMessageToPlayers("newMessage" + playerName + ": " + guessText.getText());
+			if (checkIfGuessTrue(guessText.getText())) {
+				sendMessageToPlayers("guessCorrect");
+				numPoints++;
+			}
 			guessText.setText("");
-
-//			File tempF = new File("1.txt");
-//			try {
-//				FileWriter fw = new FileWriter(tempF.getAbsoluteFile());
-//				
-//				for (String line : temp) 
-//					fw.write(line + "\n");
-//				fw.close();
-//			} catch (IOException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
 		} else if (source == clearBtn) {
 			sendMessageToPlayers("clearScreen");
 		}
@@ -222,35 +243,63 @@ public class DrawScreen implements ActionListener {
 		one = new File("1.txt");
 	}
 
+	private void initializetopicWordsFile() {
+		try {
+			topicWords = new ArrayList<String>();
+			BufferedReader br = new BufferedReader(new FileReader(topicWordsFile));
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		    	topicWords.add(line);
+		    }
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+	
+	public void updateCurrentTopic(String topic) {
+		currentTopic = topic;
+	}
+	
+	public int getNumPoints() {
+		return numPoints;
+	}
+	
 	public void updateCurrentDrawer() {
+		if (++currRound > numRounds) {
+			guessLog.setText("");
+			sendMessageToPlayers("gameOver");
+			return;
+		}
 		currentDrawer = ++currentDrawer % numPlayers;
 		System.out.println(playerNum + "..." + currentDrawer);
+		guessLog.setText("");
 		//only updates for drawer
 		if (playerNum == currentDrawer) {
+			drawArea.removeListener();
+			guessBtn.setEnabled(false);
+			guessText.setEnabled(false);
 			drawStart();
-			drawArea.addListener();
-			clearBtn.setEnabled(true);
 			Thread timer = new Thread() {
 
 				public void run() {
-					int i = 10;
-					while (i > 0) {
+					DrawScreen.time = 14;
+					while (DrawScreen.time > 0) {
 						try {
-							sendMessageToPlayers("updateTime" + i);
-							i--;
+							sendMessageToPlayers("updateTime" + String.format("%02d", DrawScreen.time));
+							DrawScreen.time--;
+							System.out.println("Drawscreen time in thread is " + DrawScreen.time);
 							Thread.sleep(1000L);
-						} catch (InterruptedException e) {
-							;
-						}
+						} catch (InterruptedException e) { ; }
 					}
 					
-					i = 3;
+					DrawScreen.time = 3;
 					drawArea.removeListener();
 					clearBtn.setEnabled(false);
-					while (i > 0) {
+					sendMessageToPlayers("showTopic");
+					while (DrawScreen.time > 0) {
 						try {
-//							sendMessageToPlayers("updateTime" + i);
-							i--;
+							DrawScreen.time--;
 							Thread.sleep(1000L);
 						} catch (InterruptedException e) {
 							;
@@ -258,13 +307,16 @@ public class DrawScreen implements ActionListener {
 					}
 					sendMessageToPlayers("clearScreen");
 					System.out.println("Updating drawer" + playerNum);
-					sendMessageToPlayers("nextDrawer" + playerNum);
+					sendMessageToPlayers("nextDrawer5");
 				}
 			};
 			timer.start();
 		} else {
 			drawArea.removeListener();
 			clearBtn.setEnabled(false);
+			guessBtn.setEnabled(true);
+			guessText.setEnabled(true);
+			topic.setText("HIDDEN");
 		}
 	}
 	
@@ -272,9 +324,10 @@ public class DrawScreen implements ActionListener {
 		drawArea.removeListener();
 		if (three.exists() && two.exists() && one.exists()) {
 			Thread timer = new Thread() {
-
 				public void run() {
 					try {
+						clearBtn.setEnabled(false);
+						guessText.setEnabled(false);
 						BufferedReader br = new BufferedReader(new FileReader(three));
 					    String line;
 					    while ((line = br.readLine()) != null) {
@@ -300,6 +353,12 @@ public class DrawScreen implements ActionListener {
 					    Thread.sleep(500);
 					    sendMessageToPlayers("clearScreen");
 					    
+					    String temp = topicWords.get(ThreadLocalRandom.current().nextInt(topicWords.size()));
+					    sendMessageToPlayers("updateTopic" + temp);
+					    topic.setText(temp);
+						drawArea.addListener();
+					    clearBtn.setEnabled(true);
+					    guessText.setEnabled(true);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -307,6 +366,11 @@ public class DrawScreen implements ActionListener {
 			};
 			timer.start();
 		}
+	}
+	
+	private boolean checkIfGuessTrue(String message) {
+		System.out.println("Current topic is " + currentTopic + ", guess is " + message.toLowerCase() + ", " + currentTopic.toLowerCase().equals(message.toLowerCase()));
+		return currentTopic.toLowerCase().equals(message.toLowerCase());
 	}
 
 	public void clearScreen() {
@@ -321,6 +385,10 @@ public class DrawScreen implements ActionListener {
 			System.exit(0);
 		}
 		cSocket.close();
+	}
+	
+	public void showCorrectAnswer() {
+		topic.setText("Topic was " + currentTopic);
 	}
 
 	public void updateLog(String message) {

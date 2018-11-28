@@ -17,6 +17,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.DatagramPacket;
@@ -321,7 +322,20 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 				public void run() {
 					System.out.println("Starting");
 					dispose();
-					screen = new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum, listener, numPlayers);
+					String topic = difficultyChooser.getSelectedItem().toString();
+					File temp = null;
+					switch (topic) {
+						case "Easy":
+							temp = new File("easyWords");
+							break;
+						case "Medium":
+							temp = new File("medWords");
+							break;
+					}
+					
+					int numRounds = numRoundsChooser.getSelectedIndex() + 1;
+					if (temp != null)
+						screen = new DrawScreen(playerNames[playerNum].getText(), cSocket, group, playerNum, listener, numPlayers, temp, numRounds);
 				}
 			});
 		} catch (InvocationTargetException e) {

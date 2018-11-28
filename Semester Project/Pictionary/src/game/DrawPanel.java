@@ -42,7 +42,6 @@ public class DrawPanel extends JPanel implements MouseListener {
 	@Override
 	protected void paintComponent(Graphics g) {
 		if (removeGraphics) {
-			System.out.println("here");
 			super.paintComponent(g);
 			removeGraphics = false;
 		} else

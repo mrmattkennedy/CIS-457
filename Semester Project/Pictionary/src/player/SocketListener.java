@@ -34,6 +34,11 @@ public class SocketListener implements Runnable {
 	private final static String clearScreenCode = "clearScreen";
 	private final static String nextDrawerCode = "nextDrawer";
 	private final static String updateTimeCode = "updateTime";
+	private final static String updateTopicCode = "updateTopic";
+	private final static String guessCorrectCode = "guessCorrect";
+	private final static String showTopicCode = "showTopic";
+	private final static String gameOverCode = "gameOver";
+	private final static String getPointsCode = "getPoints";
 	private MainGame player;
 	private DrawScreen screen;
 	
@@ -126,15 +131,17 @@ public class SocketListener implements Runnable {
 			    } else if (message.startsWith(updateDrawingCode)) {
 			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(updateDrawingCode) + updateDrawingCode.length()));
 			    	if (playerNumSent != playerNum) {
-			    		String x1 = message.substring(message.indexOf("_") + 1, message.indexOf(","));
-			    		String y1 = message.substring(message.indexOf(x1) + x1.length() + 1, 
-			    				message.indexOf(",", message.indexOf(x1) + x1.length() + 1));
+			    		String x1 = message.substring(message.indexOf("_") + 1, message.indexOf(","));         
+
+			    		String y1 = message.substring(message.indexOf(",") + 1, message.indexOf(",",
+			    				message.indexOf(",") + 1));         
+
+			    		String x2 = message.substring(message.indexOf(",", message.indexOf(",") + 1) + 1,
+			    				message.indexOf(",", message.indexOf(",", message.indexOf(",") + 1) + 1));        
+
+			    		String y2 = message.substring(message.indexOf(",", message.indexOf(",", message.indexOf(",") + 1) + 1) + 1, 
+			    				message.indexOf(",", message.indexOf(",", message.indexOf(",", message.indexOf(",") + 1) + 1) + 1));
 			    		
-			    		String x2 = message.substring(message.indexOf(y1) + y1.length() + 1, 
-			    				message.indexOf(",", message.indexOf(y1) + y1.length() + 1));
-			    		//y1 is part of x1, blows up.
-			    		String y2 = message.substring(message.indexOf(x2, message.indexOf(y1)) + x2.length() + 1,
-			    				message.indexOf(",", message.indexOf(x2, message.indexOf(y1)) + x2.length() + 1));
 //			    		System.out.println(x1 + ", " + y1 + ", " + x2 + ", " + y2);
 			    		screen.addDrawingToPanel(Integer.parseInt(x1),
 			    				Integer.parseInt(y1),
@@ -143,16 +150,37 @@ public class SocketListener implements Runnable {
 			    	}
 			    	
 			    } else if (message.startsWith(clearScreenCode)) {
+			    	System.out.println("clearing screen");
 			    	screen.clearScreen();
 			    	
 			    } else if (message.startsWith(nextDrawerCode)) {
-			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(updateDrawingCode) + updateDrawingCode.length()));
-			    	if (playerNumSent == playerNum)
+			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(nextDrawerCode) + nextDrawerCode.length()));
+			    	if (playerNumSent == playerNum || playerNumSent == 5)
 			    		screen.updateCurrentDrawer();
 			    	
 			    } else if (message.startsWith(updateTimeCode)) {
 			    	String time = message.substring(message.indexOf(updateTimeCode) + updateTimeCode.length());
 			    	screen.updateTimerLabel(time);
+			    	
+			    } else if (message.startsWith(updateTopicCode)) {
+			    	String topic = message.substring(message.indexOf(updateTopicCode) + updateTopicCode.length()).trim();
+			    	screen.updateCurrentTopic(topic);
+			    	
+			    } else if (message.startsWith(guessCorrectCode)) {
+			    	screen.updateTime();
+			    	
+			    } else if (message.startsWith(showTopicCode)) {
+			    	screen.showCorrectAnswer();
+			    	
+			    } else if (message.startsWith(gameOverCode)) {
+			    	sendMessageToPlayers(getPointsCode + playerNum + screen.getNumPoints());
+			    	
+			    } else if (message.startsWith(getPointsCode)) {
+			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(getPointsCode) + getPointsCode.length()));
+			    	if (playerNumSent != playerNum) {
+				    	String points = message.substring(message.indexOf(playerNum) + 1);
+			    		screen.updateLog("Player " + playerNum + ": " + points);
+			    	}
 			    	
 			    } else if (message.startsWith(disconnectCode)) {
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(disconnectCode) + disconnectCode.length()));
