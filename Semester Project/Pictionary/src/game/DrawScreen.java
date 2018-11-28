@@ -122,7 +122,8 @@ public class DrawScreen implements ActionListener {
 		this.playerName = playerName;
 		setGuessPanelLayout();
 		initializeFiles();
-		drawStart();
+		System.out.println("Updating drawer" + playerNum);
+		sendMessageToPlayers("nextDrawer" + playerNum);
 	}
 
 	private void setLayout() {
@@ -224,7 +225,9 @@ public class DrawScreen implements ActionListener {
 	public void updateCurrentDrawer() {
 		currentDrawer = ++currentDrawer % numPlayers;
 		System.out.println(playerNum + "..." + currentDrawer);
+		//only updates for drawer
 		if (playerNum == currentDrawer) {
+			drawStart();
 			drawArea.addListener();
 			clearBtn.setEnabled(true);
 			Thread timer = new Thread() {
@@ -241,7 +244,7 @@ public class DrawScreen implements ActionListener {
 						}
 					}
 					
-					i = 5;
+					i = 3;
 					drawArea.removeListener();
 					clearBtn.setEnabled(false);
 					while (i > 0) {
@@ -254,7 +257,8 @@ public class DrawScreen implements ActionListener {
 						}
 					}
 					sendMessageToPlayers("clearScreen");
-					drawStart();
+					System.out.println("Updating drawer" + playerNum);
+					sendMessageToPlayers("nextDrawer" + playerNum);
 				}
 			};
 			timer.start();
@@ -299,7 +303,6 @@ public class DrawScreen implements ActionListener {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					updateCurrentDrawer();
 				}
 			};
 			timer.start();

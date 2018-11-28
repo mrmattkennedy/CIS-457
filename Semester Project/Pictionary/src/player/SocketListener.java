@@ -146,7 +146,9 @@ public class SocketListener implements Runnable {
 			    	screen.clearScreen();
 			    	
 			    } else if (message.startsWith(nextDrawerCode)) {
-			    	screen.updateCurrentDrawer();
+			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(updateDrawingCode) + updateDrawingCode.length()));
+			    	if (playerNumSent == playerNum)
+			    		screen.updateCurrentDrawer();
 			    	
 			    } else if (message.startsWith(updateTimeCode)) {
 			    	String time = message.substring(message.indexOf(updateTimeCode) + updateTimeCode.length());
