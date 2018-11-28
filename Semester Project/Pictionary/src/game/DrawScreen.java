@@ -268,7 +268,9 @@ public class DrawScreen implements ActionListener {
 	public void updateCurrentDrawer() {
 		if (++currRound > numRounds) {
 			guessLog.setText("");
-			sendMessageToPlayers("gameOver");
+			guessBtn.setEnabled(false);
+			guessText.setEnabled(false);
+			sendMessageToPlayers("gameOver" + playerNum);
 			return;
 		}
 		currentDrawer = ++currentDrawer % numPlayers;

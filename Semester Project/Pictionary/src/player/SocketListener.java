@@ -173,14 +173,14 @@ public class SocketListener implements Runnable {
 			    	screen.showCorrectAnswer();
 			    	
 			    } else if (message.startsWith(gameOverCode)) {
-			    	sendMessageToPlayers(getPointsCode + playerNum + screen.getNumPoints());
+			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(gameOverCode) + gameOverCode.length()));
+			    	if (playerNumSent == playerNum)
+			    		sendMessageToPlayers(getPointsCode + playerNum + screen.getNumPoints());
 			    	
 			    } else if (message.startsWith(getPointsCode)) {
 			    	int playerNumSent = Character.getNumericValue(message.charAt(message.indexOf(getPointsCode) + getPointsCode.length()));
-			    	if (playerNumSent != playerNum) {
-				    	String points = message.substring(message.indexOf(playerNum) + 1);
-			    		screen.updateLog("Player " + playerNum + ": " + points);
-			    	}
+			    	int points = Character.getNumericValue(message.charAt(message.indexOf(getPointsCode) + getPointsCode.length() + 1));
+			    	screen.updateLog("Player " + playerNumSent + ": " + points);
 			    	
 			    } else if (message.startsWith(disconnectCode)) {
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(disconnectCode) + disconnectCode.length()));

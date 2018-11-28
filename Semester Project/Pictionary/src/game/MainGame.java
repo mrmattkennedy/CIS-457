@@ -291,6 +291,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	}
 	
 	public void updateNumRounds(int index) {
+		System.out.println("Index is " + index);
 		numRoundsChooser.setSelectedIndex(index);
 	}
 	
