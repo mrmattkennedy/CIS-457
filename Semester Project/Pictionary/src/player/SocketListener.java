@@ -183,13 +183,17 @@ public class SocketListener implements Runnable {
 			    	screen.updateLog("Player " + playerNumSent + ": " + points);
 			    	
 			    } else if (message.startsWith(disconnectCode)) {
+			    	System.out.println("here123");
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(disconnectCode) + disconnectCode.length()));
-			    	if (playerNumToUpdate != playerNum) {
-			    		player.updateTextForPlayer(playerNumToUpdate, "");
-			    	}
 			    	numPlayers--;
-			    	player.changePlayerCount(-1);
-			    	player.updateGoBtn();
+			    	if (screen == null) {
+			    		player.changePlayerCount(-1);
+				    	player.updateGoBtn();
+				    	if (playerNumToUpdate != playerNum)
+				    		player.updateTextForPlayer(playerNumToUpdate, "");
+			    	} else {
+			    		screen.playerLeft(playerNumToUpdate);
+			    	}
 			    }
 			} catch (SocketTimeoutException e) {
 				try {

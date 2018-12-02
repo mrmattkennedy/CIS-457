@@ -214,7 +214,6 @@ public class DrawScreen implements ActionListener {
 	}
 	
 	public void updateTime() {
-		
 		guessBtn.setEnabled(false);
 		guessText.setEnabled(false);
 		DrawScreen.time = 0;
@@ -378,9 +377,25 @@ public class DrawScreen implements ActionListener {
 	public void clearScreen() {
 		drawArea.clearScreen();
 	}
+	
+	public void playerLeft(int playerNumLeft) {
+		numPlayers--;
+		if (playerNumLeft == currentDrawer) {
+			topic.setText("Drawer left!");
+			System.out.println("Num players: " + numPlayers);
+			guessBtn.setEnabled(false);
+			guessText.setEnabled(false);
+			DrawScreen.time = 3;
+			updateCurrentDrawer();
+		}
+		
+		if (numPlayers == 1)
+			currRound = numRounds + 1;
+	}
 
 	public void disconnect() {
 		try {
+			sendMessageToPlayers("disconnect" + playerNum);
 			cSocket.leaveGroup(group);
 			listener.stop();
 		} catch (IOException e) {
