@@ -63,6 +63,8 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	private boolean playerReady = false;
 	private String goBtnStatus = "READY";
 	private DrawScreen screen;
+	private String difficultySelected = "Easy";
+	private int numRoundsSelected = 1; 
 	
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 450;
@@ -283,6 +285,8 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	}
 	
 	public void updateDifficulty(int index) {
+		difficultySelected = difficultyChooser.getItemAt(index);
+		System.out.println("Difficulty is " + difficultySelected);
 		difficultyChooser.setSelectedIndex(index);
 	}
 	
@@ -292,6 +296,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	
 	public void updateNumRounds(int index) {
 		System.out.println("Index is " + index);
+		numRoundsSelected = index + 1;
 		numRoundsChooser.setSelectedIndex(index);
 	}
 	
@@ -380,9 +385,11 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			disconnect();
 			this.dispose();
 		} else if (source == difficultyChooser) {
+			System.out.println("selected is " + difficultyChooser.getSelectedIndex());
 			sendMessageToPlayers("difficulty" + difficultyChooser.getSelectedIndex(), 100000);
 		} else if (source == numRoundsChooser) {
-			sendMessageToPlayers("rounds" + numRoundsChooser.getSelectedIndex(), 100000);
+			for (int i = 0; i < 5; i++)
+				sendMessageToPlayers("rounds" + numRoundsChooser.getSelectedIndex(), 100000);
 		}
 
 	}

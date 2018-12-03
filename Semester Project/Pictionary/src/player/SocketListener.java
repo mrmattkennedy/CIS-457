@@ -84,8 +84,8 @@ public class SocketListener implements Runnable {
 			    	
 			    } else if (message.startsWith(difficultyCode)) {
 			    	if (playerNum != 0) {
-			    		int index = Character.getNumericValue(message.charAt(message.indexOf(difficultyCode) + difficultyCode.length()));
-			    		player.updateDifficulty(index);
+			    		int difficulty = Character.getNumericValue(message.charAt(message.indexOf(difficultyCode) + difficultyCode.length()));
+			    		player.updateDifficulty(difficulty);
 			    	}
 			    	
 			    } else if (message.startsWith(numRoundsCode)) {

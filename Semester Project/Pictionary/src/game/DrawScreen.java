@@ -284,7 +284,7 @@ public class DrawScreen implements ActionListener {
 			Thread timer = new Thread() {
 
 				public void run() {
-					DrawScreen.time = 14;
+					DrawScreen.time = 34;
 					while (DrawScreen.time > 0) {
 						try {
 							sendMessageToPlayers("updateTime" + String.format("%02d", DrawScreen.time));
