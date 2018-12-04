@@ -12,6 +12,7 @@ import java.util.List;
 import game.DrawScreen;
 import game.MainGame;
 
+//Class is used on a separate thread to listen for a player and interact with a group.
 public class SocketListener implements Runnable {
 	
 	private MulticastSocket cSocket;
@@ -19,6 +20,8 @@ public class SocketListener implements Runnable {
 	private boolean clientQuit = false;
 	private int playerNum;
 	private int numPlayers = 0;
+	
+	//All codes the Socket will receive.
 	private final static String receivedCode = "updateTextField";
 	private final static String disconnectCode = "disconnect";
 	private final static String readyCode = "ready";
@@ -53,15 +56,18 @@ public class SocketListener implements Runnable {
 	public void run() {
 		while (!clientQuit) {
 			try {
+				//Get the message.
 			    byte[] buffer = new byte[1000];
 			    DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
 			    cSocket.receive(datagram);
 			    String message = new String(datagram.getData());
 			    System.out.println(message);
 			    
+			    //Used with new players.
 			    if (message.contains("count")) {
 			    	sendMessageToPlayers(playerNum + "received " + player.getUsername());
 			    	
+			    	//Updating text field.
 			    } else if (message.startsWith(receivedCode)) {
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(receivedCode) + receivedCode.length()));
 			    	if (playerNumToUpdate != playerNum) {
@@ -183,7 +189,6 @@ public class SocketListener implements Runnable {
 			    	screen.updateLog("Player " + playerNumSent + ": " + points);
 			    	
 			    } else if (message.startsWith(disconnectCode)) {
-			    	System.out.println("here123");
 			    	int playerNumToUpdate = Character.getNumericValue(message.charAt(message.indexOf(disconnectCode) + disconnectCode.length()));
 			    	numPlayers--;
 			    	if (screen == null) {
@@ -195,6 +200,8 @@ public class SocketListener implements Runnable {
 			    		screen.playerLeft(playerNumToUpdate);
 			    	}
 			    }
+			    //Sockets timeout fairly frequently, if no message is given.
+			    //Resets timeout so exception is handled.
 			} catch (SocketTimeoutException e) {
 				try {
 					cSocket.setSoTimeout(100000);
@@ -202,6 +209,7 @@ public class SocketListener implements Runnable {
 					continue;
 				}
 				
+				//Issue with socket = disconnect.
 			} catch (SocketException e) {
 				player.disconnect();
 			} catch (Exception e) {

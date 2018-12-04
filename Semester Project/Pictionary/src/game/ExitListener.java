@@ -3,6 +3,7 @@ package game;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+//Checks if player closed window.
 public class ExitListener extends WindowAdapter {
 
 	   MainGame client;
@@ -16,6 +17,7 @@ public class ExitListener extends WindowAdapter {
 		      this.screen = client;
 		   }
 	      
+	   //Checks if maingame active or screen active.
 	   public void windowClosing(WindowEvent e) {
 		  if (client != null)
 			  client.disconnect();

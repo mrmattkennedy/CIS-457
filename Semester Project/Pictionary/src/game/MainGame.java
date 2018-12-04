@@ -1,13 +1,6 @@
 package game;
 //start screen where players join, main screen
 
-//game starts,
-//datagram packet to request player nums, get highest response.
-//reuse components by replacing panel, then replacing. not necessary
-//add increment on players.. currently adds in context, but need to reset?
-//player added - call to group, reset group completely, then new call to group to add 1 new add call per player
-//impossible to do, message goes to all 4 players, how to check to 
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -37,9 +30,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import player.Player;
 import player.SocketListener;
 
+//MainGame screen where the game is setup.
 public class MainGame extends JFrame implements ActionListener, DocumentListener {
 
 	private JPanel playerPanel;
@@ -70,6 +63,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 	private static final int HEIGHT = 450;
 
 	public MainGame(MulticastSocket socket, InetAddress group) {
+		//Socket and group already established.
 		cSocket = socket;
 		this.group = group;
 		screen = null;
@@ -87,6 +81,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 
 		playerNames = new JTextField[playerCount.length];
 		players = new JPanel[playerCount.length];
+		//Create the common details between each "player" section.
 		for (int i = 0; i < playerCount.length; i++) {
 			playerNames[i] = new JTextField();
 			playerNames[i].setPreferredSize(new Dimension(300, 30));
@@ -95,7 +90,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			players[i].setBorder(BorderFactory.createLineBorder(Color.black));
 
 			JPanel tempPanel = new JPanel();
-			JLabel label = new JLabel("Player" + playerCount[i]);
+			JLabel label = new JLabel("Player" + (playerCount[i] - 1));
 
 			// Add player label to top
 			label.setFont(panelFont);
@@ -124,7 +119,8 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 
 		controlPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 
-		difficulty = new String[] { "Easy", "Medium", "Hard", "Really Hard", "Movies", "People" };
+		//Available difficulties.
+		difficulty = new String[] { "Easy", "Medium"};//, "Hard", "Really Hard", "Movies", "People" };
 		numRounds = new String[10];
 		for (int i = 0; i < numRounds.length; i++)
 			numRounds[i] = Integer.toString(i + 1);
@@ -168,6 +164,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		
 		sendMessageToPlayers("newPlayer" + playerNum, 100000);
 
+		//Add window listener to check if player disconnects.
 		this.addWindowListener(new ExitListener(this));
 		this.setSize(new Dimension(WIDTH + 50, HEIGHT + 75));
 		this.setLayout(new GridBagLayout());
@@ -200,6 +197,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 
 	}
 	
+	//Retrieves info of players already in session.
 	private String[] getPlayerInfo() {
 		sendMessageToPlayers("count", 500);
 		String[] temp = new String[4];
@@ -210,7 +208,6 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 			    cSocket.receive(datagram);
 			    String message = new String(datagram.getData());
 			    if (message.contains("received")) {
-			    	message.substring(message.indexOf("received") - 1, 1);
 			    	int playerNum = Integer.parseInt(message.substring(message.indexOf("received") - 1, 1));
 			    	temp[playerNum] = message.substring(message.indexOf("received") + "received ".length());
 			    }
@@ -304,6 +301,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		return numRoundsChooser.getSelectedIndex();
 	}
 	
+	//Player has closed window, disconnect.
 	public void disconnect() {
 		if (playerReady) 
 			sendMessageToPlayers("unready", 100000);
@@ -318,7 +316,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 		cSocket.close();
 	}
 	
-	
+	//All players are ready.
 	public DrawScreen startGame() {
 		//Invoke and wait necessary for concurrency in EDT thread for Swing utilities.
 		//Can't use invokeLater due to screen being assigned, so the run block will be skipped
@@ -378,7 +376,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 				;
 			}
 			System.out.println(numReadyPlayers + " : " +  numPlayers);
-			if (numReadyPlayers == numPlayers)// && numPlayers > 1)
+			if (numReadyPlayers == numPlayers && numPlayers > 1)
 				sendMessageToPlayers("start", 100000);
 				
 		} else if (source == cancelBtn) {
@@ -394,6 +392,7 @@ public class MainGame extends JFrame implements ActionListener, DocumentListener
 
 	}
 
+	//These listen for changes in the text field.
 	@Override
 	public void changedUpdate(DocumentEvent arg0) { ; }
 

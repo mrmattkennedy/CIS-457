@@ -11,17 +11,18 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+//Panel where drawer can draw, and updates sent to other players.
 public class DrawPanel extends JPanel implements MouseListener {
 	
 	private int x1, x2, y1, y2;
-	private JFrame frame;
-	private Graphics2D g2;
 	private boolean onPanel;
 	private JPanel thisPanel;
 	private DrawScreen paFrame;
 	private boolean removeGraphics = true;
 	
+	//Used to determine if mouse is pressed. Volatile for thread safety.
 	volatile private boolean isRunning = false;
+	
 	
 	public DrawPanel(DrawScreen paFrame) {
 		thisPanel = this;
@@ -39,6 +40,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 		removeMouseListener(this);
 	}
 	
+	//Checks if clear was pressed first, then draws.
 	@Override
 	protected void paintComponent(Graphics g) {
 		if (removeGraphics) {
@@ -63,6 +65,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 		
 	}
 
+	//Gets new coordinates, and initializes thread when mouse pressed.
 	@Override
 	public void mousePressed(MouseEvent arg0) {
 		if (arg0.getButton() == MouseEvent.BUTTON1) {
@@ -74,6 +77,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 		
 	}
 
+	//Sets is running to false, kills drawing thread.
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 		if (arg0.getButton() == MouseEvent.BUTTON1) {
@@ -82,13 +86,16 @@ public class DrawPanel extends JPanel implements MouseListener {
 		
 	}
 	
-	
+	//Uses volatile isRunning to run thread to draw, else EDT will freeze for this and lock,
+	//because mouseReleased can never be called.
 	private void initThread() {
 	    if (isRunning) {
 	        new Thread() {
 	            public void run() {
 	                do {
+	                	//If mouse on panel, draw.
 	                    if (onPanel) {
+	                    	//Set old x1 and y1, then get new coords relative to panel.
 	                    	x1 = x2;
 	                    	y1 = y2;
 	                    	Point p = MouseInfo.getPointerInfo().getLocation();
@@ -97,6 +104,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 	                    	y2 = (int) p.getY();
 	                    	repaint();
 	                    	updateAllPanels();
+	                    	//Sleep so thread doesn't do crazy amounts of drawing/sending.
 	                    	try {
 								Thread.sleep(20);
 							} catch (InterruptedException e) {
@@ -110,6 +118,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 	    }
 	}
 	
+	//Update all panels of drawing.
 	private void updateAllPanels() {
 		paFrame.updatePanel(x1, y1, x2, y2);
 	}
@@ -119,6 +128,7 @@ public class DrawPanel extends JPanel implements MouseListener {
 		repaint();
 	}
 	
+	//Got a drawing, update panel.
 	public void updateDrawing(int x1, int y1, int x2, int y2) {
 		this.x1 = x1;
 		this.x2 = x2;

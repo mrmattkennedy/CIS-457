@@ -35,8 +35,8 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.text.StyleConstants;
 
-import player.Player;
 
+//GUI that holds the actual pictionary game and draw screen.
 public class DrawScreen implements ActionListener {
 
 	private JFrame frame;
@@ -73,6 +73,7 @@ public class DrawScreen implements ActionListener {
 	private File topicWordsFile;
 	private String currentTopic;
 	private List<String> topicWords;
+	private boolean gameOver = false;
 	
 //	ArrayList<String> temp = new ArrayList<String>();
 
@@ -85,6 +86,7 @@ public class DrawScreen implements ActionListener {
 			File topicWordsFile,
 			int numRounds) {
 		
+		//All of these established prior.
 		this.cSocket = socket;
 		this.group = group;
 		this.listener = listener;
@@ -201,6 +203,7 @@ public class DrawScreen implements ActionListener {
 		guessPanel.add(guessPanelControls, gbCons);
 	}
 
+	//Updating a drawing point for a panel.
 	public void updatePanel(int x1, int y1, int x2, int y2) {
 		sendMessageToPlayers("updateDrawing" + playerNum + "_" + x1 + "," + y1 + "," + x2 + "," + y2 + ",");
 	}
@@ -213,6 +216,7 @@ public class DrawScreen implements ActionListener {
 		timerLabel.setText("Time: " + time);
 	}
 	
+	//Timer updated.
 	public void updateTime() {
 		guessBtn.setEnabled(false);
 		guessText.setEnabled(false);
@@ -223,6 +227,7 @@ public class DrawScreen implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		Object source = e.getSource();
 
+		//Player made a guess, check if right, end round if so.
 		if (source == guessBtn) {
 			sendMessageToPlayers("newMessage" + playerName + ": " + guessText.getText());
 			if (checkIfGuessTrue(guessText.getText())) {
@@ -235,6 +240,7 @@ public class DrawScreen implements ActionListener {
 		}
 	}
 	
+	//Load in the 3-2-1 at the beginning of each round.
 	private void initializeFiles() {
 
 		three = new File("3.txt");
@@ -250,6 +256,7 @@ public class DrawScreen implements ActionListener {
 		    while ((line = br.readLine()) != null) {
 		    	topicWords.add(line);
 		    }
+		    br.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
@@ -261,10 +268,12 @@ public class DrawScreen implements ActionListener {
 	}
 	
 	public int getNumPoints() {
+		gameOver = true;
 		return numPoints;
 	}
 	
 	public void updateCurrentDrawer() {
+		//Checks if all rounds played. Ends game if so.
 		if (++currRound > numRounds) {
 			guessLog.setText("");
 			guessBtn.setEnabled(false);
@@ -272,6 +281,8 @@ public class DrawScreen implements ActionListener {
 			sendMessageToPlayers("gameOver" + playerNum);
 			return;
 		}
+		
+		//Increment the current drawer.
 		currentDrawer = ++currentDrawer % numPlayers;
 		System.out.println(playerNum + "..." + currentDrawer);
 		guessLog.setText("");
@@ -281,6 +292,8 @@ public class DrawScreen implements ActionListener {
 			guessBtn.setEnabled(false);
 			guessText.setEnabled(false);
 			drawStart();
+			
+			//Start timer thread.
 			Thread timer = new Thread() {
 
 				public void run() {
@@ -321,6 +334,7 @@ public class DrawScreen implements ActionListener {
 		}
 	}
 	
+	//Starts each round with 3-2-1 drawings.
 	private void drawStart() {
 		drawArea.removeListener();
 		if (three.exists() && two.exists() && one.exists()) {
@@ -374,12 +388,18 @@ public class DrawScreen implements ActionListener {
 		return currentTopic.toLowerCase().equals(message.toLowerCase());
 	}
 
+	
+	//Clears all drawing off screen.
 	public void clearScreen() {
 		drawArea.clearScreen();
 	}
 	
+	//Player disconnected.
 	public void playerLeft(int playerNumLeft) {
+		if (gameOver)
+			return;
 		numPlayers--;
+		System.out.println("numPlayers is" + numPlayers);
 		if (playerNumLeft == currentDrawer) {
 			topic.setText("Drawer left!");
 			System.out.println("Num players: " + numPlayers);

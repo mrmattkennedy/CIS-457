@@ -5,16 +5,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.MulticastSocket;
+import java.net.URL;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
 import game.MainGame;
 
+//Starting point for the program
 public class StartScreen implements ActionListener {
 	
 	private JButton playGame;
@@ -34,13 +40,17 @@ public class StartScreen implements ActionListener {
 		playGame = new JButton("PLAY");
 		playGame.addActionListener(this);
 		panel = new JPanel();
+		ImageIcon icon = new ImageIcon("logo.png");
+		JLabel label = new JLabel(icon);
+		label.setPreferredSize(new Dimension(300, 58));
 		
 		panel.add(addressText);
 		panel.add(portText);
 		panel.add(playGame);
+		panel.add(label);
 		frame = new JFrame();
 		frame.getContentPane().add(panel);
-		frame.setSize(new Dimension(400, 205));
+		frame.setSize(new Dimension(400, 150));
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.setResizable(false);
@@ -59,6 +69,7 @@ public class StartScreen implements ActionListener {
 			String address = addressText.getText();
 			int port = Integer.parseInt(portText.getText());
 			
+			//Initialize socket and group, send to MainGame instance.
 			try {
 				socket = new MulticastSocket(port);
 		        group = InetAddress.getByName(address);
